@@ -1,13 +1,6 @@
-visualc_2015/Debug/
 visualc_2015/.vs/
+visualc_2015/obj/
 bin/
-visualc_2015/extlib/zlib/vs2015/
-visualc_2015/extlib/libpng/projects/vs2015/
-visualc_2015/extlib/libogg/win32/VS2015/
-visualc_2015/extlib/libvorbis/win32/VS2015/
-visualc_2015/extlib/SDL/vs2015/
-visualc_2015/extlib/SDL_sound/vs2015/
-visualc_2015/extlib/SDL_net/vs2015/
 *.user
 *.db
 *.opendb
