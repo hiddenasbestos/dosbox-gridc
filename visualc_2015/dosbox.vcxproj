@@ -68,9 +68,7 @@
     <_ProjectFileVersion>14.0.24730.2</_ProjectFileVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)../bin/DOSBOX/</OutDir>
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName)_debug</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)../bin/DOSBOX/</OutDir>
@@ -82,9 +80,7 @@
     <TargetName>$(ProjectName)_gamelink</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Game Link Debug|Win32'">
-    <OutDir>$(SolutionDir)../bin/DOSBOX/</OutDir>
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>$(ProjectName)_gamelink</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
