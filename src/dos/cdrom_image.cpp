@@ -119,6 +119,7 @@ int CDROM_Interface_Image::AudioFile::getLength()
 			shift += time >> 1;
 			time = 1;
 		} else {
+#undef max
 			if (time > ((numeric_limits<int>::max() - shift) / 2)) return -1;
 			time = time << 1;
 		}
