@@ -529,11 +529,11 @@ static int CreateSecondary(LPDIRECTSOUND sndObj, HWND focus,
 #ifdef USE_POSITION_NOTIFY
 	format.dwFlags |= DSBCAPS_CTRLPOSITIONNOTIFY;
 #endif
-	if ( ! focus ) {
+	/*if ( ! focus ) {*/ /* DOSBOX-GRIDC */
 		format.dwFlags |= DSBCAPS_GLOBALFOCUS;
-	} else {
+	/*} else {
 		format.dwFlags |= DSBCAPS_STICKYFOCUS;
-	}
+	}*/
 	format.dwBufferBytes = numchunks*chunksize;
 	if ( (format.dwBufferBytes < DSBSIZE_MIN) ||
 	     (format.dwBufferBytes > DSBSIZE_MAX) ) {
