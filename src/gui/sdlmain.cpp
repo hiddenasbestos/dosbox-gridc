@@ -148,6 +148,9 @@ struct SDL_Block {
 	bool inited;
 	bool active;							//If this isn't set don't draw
 	bool updating;
+// DWD BEGIN
+	std::string window_title;
+// DWD END
 	struct {
 		Bit32u width;
 		Bit32u height;
@@ -287,17 +290,29 @@ bool startup_state_capslock=false;
 
 void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 	char title[200]={0};
-	static Bit32s internal_cycles=0;
-	static Bit32s internal_frameskip=0;
-	if(cycles != -1) internal_cycles = cycles;
-	if(frameskip != -1) internal_frameskip = frameskip;
-	if(CPU_CycleAutoAdjust) {
-		sprintf(title,"DOSBox %s, CPU speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
-	} else {
-		sprintf(title,"DOSBox %s, CPU speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+	
+// DWD BEGIN
+	if ( sdl.window_title.empty() )
+	{	
+// DWD END
+		static Bit32s internal_cycles=0;
+		static Bit32s internal_frameskip=0;
+		if(cycles != -1) internal_cycles = cycles;
+		if(frameskip != -1) internal_frameskip = frameskip;
+		if(CPU_CycleAutoAdjust) {
+			sprintf(title,"DOSBox %s, CPU speed: max %3d%% cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		} else {
+			sprintf(title,"DOSBox %s, CPU speed: %8d cycles, Frameskip %2d, Program: %8s",VERSION,internal_cycles,internal_frameskip,RunningProgram);
+		}
+// DWD BEGIN
 	}
+	else
+	{
+		sprintf(title,"%s",sdl.window_title.c_str());
+	}
+// DWD END
 
-	if(paused) strcat(title," PAUSED");
+	if(paused) strcat(title," [PAUSED]"); // [ DWD ] !
 	SDL_WM_SetCaption(title,VERSION);
 }
 
@@ -1173,6 +1188,9 @@ static void GUI_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	sdl.active=false;
 	sdl.updating=false;
+// DWD BEGIN
+	sdl.window_title=section->Get_string("windowtitle");
+// DWD END
 
 	GFX_SetIcon();
 
@@ -1702,6 +1720,11 @@ void Config_Add_SDL() {
 	Prop_string* Pstring;
 	Prop_int* Pint;
 	Prop_multival* Pmulti;
+
+// DWD BEGIN
+	Pstring = sdl_sec->Add_string("windowtitle",Property::Changeable::Always,"");
+	Pstring->Set_help("Specify a caption to use for the application window (e.g. windowtitle=Game Name)");
+// DWD END
 
 	Pbool = sdl_sec->Add_bool("fullscreen",Property::Changeable::Always,false);
 	Pbool->Set_help("Start dosbox directly in fullscreen. (Press ALT-Enter to go back)");
