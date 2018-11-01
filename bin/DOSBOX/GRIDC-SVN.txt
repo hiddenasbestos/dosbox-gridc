@@ -1,0 +1,50 @@
+
+--------------
+--- HELLO! ---
+--------------
+
+This is DOSBox GRIDC-SVN by David Walters.
+
+The source can be found here:
+https://github.com/hiddenasbestos/dosbox-gridc
+
+The official SVN revision it's based on can be found here:
+http://sourceforge.net/p/dosbox/code-0/HEAD/tree/
+
+It's designed as a drop-in replacement for existing DOSBox installations.
+
+
+-----------------
+--- GAME LINK ---
+-----------------
+
+Game Link allows Grid Cartographer to communicate with the emulated game that DOSBox is running. It provides a mechanism for video, input and game data to be shared, to play a game in a "picture-in-picture" mode.
+
+When running the replacement "dosbox.exe" the default mode is to only allow access to read DOS memory. In this mode the game will appear in the DOSBox window as normal. Grid Cartographer can read from DOS memory and extract information to enhance the game experience. For example, reading out the current player position and showing it as a top-down map.
+
+Enable video and input sharing in one of three ways:
+
+1. Setting the 'output' parameter in the dosbox.conf file to 'gamelink' (instead of surface, overlay, etc.)
+2. Use the 'dosbox_gamelink' executable instead. This is hard coded to always use 'gamelink' output and ignore the dosbox.conf file (useful if you don't want to keep changing it back and forth).
+3. Adding '-gamelink' to the command line parameters of 'dosbox'.
+
+NOTE: If you wish to completely disable all Game Link functions from DOSBox add the line 'gamelinkmaster=false' to the [sdl] section of dosbox.conf.
+
+
+---------------------
+--- EXTRA CHANGES ---
+---------------------
+
+The following extra features have also been added. They are all disabled by default.
+
+* Custom Window Title. Make games look friendlier with a custom window title. Set the option windowtitle=%name% with the text of your choice, or leave blank for default behaviour.
+
+* Fixes for audio 'popping' in Wizardry 6 and 7. To enable this add the line wizpopfix=6 or wizpopfix=7 below pcspeaker=true in the dosbox.conf file.
+
+
+------------------
+--- DISCLAIMER ---
+------------------
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
