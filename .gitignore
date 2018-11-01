@@ -1,6 +1,7 @@
 visualc_2015/.vs/
 visualc_2015/obj/
-bin/
 *.user
 *.db
 *.opendb
+*.exe
+*.dll
