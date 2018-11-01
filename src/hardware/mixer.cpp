@@ -90,6 +90,25 @@ static struct {
 
 Bit8u MixTemp[MIXER_BUFSIZE];
 
+// DWD BEGIN
+void MIXER_SetMaster(float vol0,float vol1)
+{
+	// Changed?
+	if ( mixer.mastervol[0] != vol0 || mixer.mastervol[1] != vol1 )
+	{
+		mixer.mastervol[ 0 ] = vol0;
+		mixer.mastervol[ 1 ] = vol1;
+
+		/* apply to all channels */
+		MixerChannel * chan = mixer.channels;
+		while ( chan ) {
+			chan->UpdateVolume();
+			chan = chan->next;
+		}
+	}
+}
+// DWD END
+
 MixerChannel * MIXER_AddChannel(MIXER_Handler handler,Bitu freq,const char * name) {
 	MixerChannel * chan=new MixerChannel();
 	chan->scale = 1.0;

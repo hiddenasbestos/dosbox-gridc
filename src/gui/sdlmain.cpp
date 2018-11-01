@@ -49,9 +49,22 @@
 #include "cpu.h"
 #include "cross.h"
 #include "control.h"
+#include "mixer.h" //DWD
+
+//DWD BEGIN
+#if C_GAMELINK
+#include "../gamelink/gamelink.h"
+#include "render.h"
+#ifdef WIN32
+#include "SDL_syswm.h"
+#include "../resource.h"
+#endif // WIN32
+#endif // C_GAMELINK
+//DWD END
 
 #define MAPPERFILE "mapper-" VERSION ".map"
 //#define DISABLE_JOYSTICK
+extern void MAPPER_SetGameLinkMode( bool gamelink ); //DWD
 
 #if C_OPENGL
 #include "SDL_opengl.h"
@@ -132,6 +145,9 @@ enum SCREEN_TYPES	{
 	SCREEN_SURFACE_DDRAW,
 	SCREEN_OVERLAY,
 	SCREEN_OPENGL
+// DWD BEGIN
+	,SCREEN_GAMELINK
+// DWD END
 };
 
 enum PRIORITY_LEVELS {
@@ -190,6 +206,18 @@ struct SDL_Block {
 		bool pixel_buffer_object;
 	} opengl;
 #endif
+// DWD BEGIN
+#if C_GAMELINK
+	struct {
+		Bitu pitch;
+		void * framebuf;
+		GameLink::sSharedMMapInput_R2 input_prev;
+		GameLink::sSharedMMapInput_R2 input;
+		GameLink::sSharedMMapAudio_R1 audio;
+		bool want_mouse;
+	} gamelink;
+#endif // C_GAMELINK
+// DWD END
 	struct {
 		SDL_Surface * surface;
 #if C_DDRAW
@@ -201,6 +229,9 @@ struct SDL_Block {
 		PRIORITY_LEVELS nofocus;
 	} priority;
 	SDL_Rect clip;
+// DWD BEGIN
+	SDL_Surface * splash_surf;
+// DWD END
 	SDL_Surface * surface;
 	SDL_Overlay * overlay;
 	SDL_cond *cond;
@@ -283,6 +314,9 @@ SDL_Surface* SDL_SetVideoMode_Wrap(int width,int height,int bpp,Bit32u flags){
 }
 
 extern const char* RunningProgram;
+// DWD BEGIN
+extern Bit32u RunningProgramHash[ 4 ];
+// DWD END
 extern bool CPU_CycleAutoAdjust;
 //Globals for keyboard initialisation
 bool startup_state_numlock=false;
@@ -319,6 +353,71 @@ void GFX_SetTitle(Bit32s cycles,Bits frameskip,bool paused){
 static unsigned char logo[32*32*4]= {
 #include "dosbox_logo.h"
 };
+
+
+// DWD BEGIN
+
+#include "dosbox_splash.h"
+
+static void GUI_SplashScreenInit()
+{
+	Bit32u rmask = 0x000000ff;
+    Bit32u gmask = 0x0000ff00;
+    Bit32u bmask = 0x00ff0000;
+
+	sdl.splash_surf = SDL_CreateRGBSurface( SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0 );
+}
+
+static void GUI_SplashScreen( const bool pause )
+{
+	/* Please leave the Splash screen stuff in working order in DOSBox. We spend a lot of time making DOSBox. */
+
+	sdl.surface = SDL_SetVideoMode_Wrap( 640,400,32,0 );
+   
+	if ( sdl.splash_surf )
+	{
+		SDL_FillRect( sdl.splash_surf, NULL, SDL_MapRGB( sdl.splash_surf->format, 0, 0, 0 ) );
+
+		//
+		// Decompress Splash Image
+
+		Bit8u* tmpbufp = new Bit8u[640*400*3];
+		GIMP_IMAGE_RUN_LENGTH_DECODE(tmpbufp,gimp_image.rle_pixel_data,640*400,3);
+		for (Bitu y=0; y<400; y++) {
+
+			Bit8u* tmpbuf = tmpbufp + y*640*3;
+			Bit32u * draw=(Bit32u*)(((Bit8u *)sdl.splash_surf->pixels)+((y)*sdl.splash_surf->pitch));
+			for (Bitu x=0; x<640; x++) {
+				*draw++ = tmpbuf[x*3+0]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+2]*0x10000+0x00000000;
+			}
+		}
+
+		delete [] tmpbufp;
+	}
+
+	bool exit_splash = false;
+
+	static Bitu max_splash_loop = pause ? 600 : 2;
+
+	for (Bit32u ct = 0,startticks = GetTicks();ct < max_splash_loop;ct = GetTicks()-startticks) {
+		SDL_Event evt;
+		while (SDL_PollEvent(&evt)) {
+			if (evt.type == SDL_QUIT) {
+				exit_splash = true;
+				break;
+			}
+
+			SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
+			SDL_BlitSurface(sdl.splash_surf, NULL, sdl.surface, NULL);
+			SDL_Flip(sdl.surface);
+		}
+		if (exit_splash) break;
+	}
+}
+
+// DWD END
+
+
 static void GFX_SetIcon() {
 #if !defined(MACOSX)
 	/* Set Icon (must be done before any sdl_setvideomode call) */
@@ -334,17 +433,27 @@ static void GFX_SetIcon() {
 }
 
 
-static void KillSwitch(bool pressed) {
+void KillSwitch(bool pressed) { // DWD (was static)
 	if (!pressed)
 		return;
 	throw 1;
 }
 
-static void PauseDOSBox(bool pressed) {
+// DWD BEGIN =======
+bool g_paused = false; // DWD <-- extern
+void PauseDOSBox(bool pressed) { // DWD (was static)
 	if (!pressed)
 		return;
+	if (g_paused)
+	{
+		g_paused = false;
+		return; // <--- unwinds down to GFX_OutputGameLink below.
+	}
+	else
+	{
+		g_paused = true;
+	}
 	GFX_SetTitle(-1,-1,true);
-	bool paused = true;
 	KEYBOARD_ClrBuffer();
 	SDL_Delay(500);
 	SDL_Event event;
@@ -352,17 +461,23 @@ static void PauseDOSBox(bool pressed) {
 		// flush event queue.
 	}
 
-	while (paused) {
+	while (g_paused) {
+#if C_GAMELINK
+		// Keep GameLink ticking over.
+		SDL_Delay(100);
+		GFX_OutputGameLink();
+		if ( SDL_PollEvent(&event) == 0 )
+			continue;
+#else // C_GAMELINK
 		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
+#endif // C_GAMELINK
 		switch (event.type) {
 
 			case SDL_QUIT: KillSwitch(true); break;
 			case SDL_KEYDOWN:   // Must use Pause/Break Key to resume.
 			case SDL_KEYUP:
 			if(event.key.keysym.sym == SDLK_PAUSE) {
-
-				paused = false;
-				GFX_SetTitle(-1,-1,false);
+				g_paused = false;
 				break;
 			}
 #if defined (MACOSX)
@@ -374,7 +489,10 @@ static void PauseDOSBox(bool pressed) {
 #endif
 		}
 	}
+
+	GFX_SetTitle(-1,-1,false); // DWD
 }
+// DWD END ========
 
 #if defined (WIN32)
 bool GFX_SDLUsingWinDIB(void) {
@@ -443,6 +561,15 @@ check_gotbpp:
 		flags&=~(GFX_CAN_8|GFX_CAN_15|GFX_CAN_16);
 		break;
 #endif
+// DWD BEGIN
+#if C_GAMELINK
+	case SCREEN_GAMELINK:
+		if (flags & GFX_RGBONLY || !(flags&GFX_CAN_32)) goto check_surface;
+		flags|=GFX_SCALING;
+		flags&=~(GFX_CAN_8|GFX_CAN_15|GFX_CAN_16);
+		break;
+#endif // C_GAMELINK
+// DWD END
 	default:
 		goto check_surface;
 		break;
@@ -781,6 +908,22 @@ dosurface:
 	break;
 		}//OPENGL
 #endif	//C_OPENGL
+// DWD BEGIN
+#if C_GAMELINK
+	case SCREEN_GAMELINK:
+	{
+		sdl.surface = 0;
+		if (sdl.gamelink.framebuf == 0 ) {
+			sdl.gamelink.framebuf = malloc( SCALER_MAXWIDTH * SCALER_MAXHEIGHT * 4 );	// 32 bit color frame buffer
+		}
+		sdl.gamelink.pitch=width*4;
+
+		sdl.desktop.type=SCREEN_GAMELINK;
+		retFlags = GFX_CAN_32 | GFX_SCALING;
+		break;
+	}
+#endif //C_GAMELINK
+// DWD END
 	default:
 		goto dosurface;
 		break;
@@ -817,7 +960,7 @@ void GFX_UpdateSDLCaptureState(void) {
 
 bool mouselocked; //Global variable for mapper
 static void CaptureMouse(bool pressed) {
-	if (!pressed)
+	if (!pressed || sdl.desktop.want_type == SCREEN_GAMELINK ) // DWD
 		return;
 	GFX_CaptureMouse();
 }
@@ -861,7 +1004,7 @@ void GFX_SwitchFullScreen(void) {
 }
 
 static void SwitchFullScreen(bool pressed) {
-	if (!pressed)
+	if (!pressed || sdl.desktop.want_type == SCREEN_GAMELINK ) // DWD
 		return;
 
 	if (sdl.desktop.lazy_fullscreen) {
@@ -940,12 +1083,36 @@ bool GFX_StartUpdate(Bit8u * & pixels,Bitu & pitch) {
 		sdl.updating=true;
 		return true;
 #endif
+// DWD BEGIN
+#if C_GAMELINK
+	case SCREEN_GAMELINK:
+		pixels= (Bit8u *)sdl.gamelink.framebuf;
+		pitch=sdl.gamelink.pitch;
+		sdl.updating=true;
+		return true;
+#endif // C_GAMELINK
+// DWD END
 	default:
 		break;
 	}
 	return false;
 }
 
+// DWD BEGIN
+#if C_GAMELINK
+void GFX_OutputGameLink()
+{
+	// don't check sdl.desktop.type == SCREEN_GAMELINK here, we may be in slim track-only mode.
+
+	GameLink::Out( (Bit16u)sdl.draw.width, (Bit16u)sdl.draw.height, render.src.ratio,
+		sdl.gamelink.want_mouse,
+		RunningProgram,
+		RunningProgramHash,
+		(const Bit8u*)sdl.gamelink.framebuf,
+		MemBase );
+}
+#endif // C_GAMELINK
+// DWD END
 
 void GFX_EndUpdate( const Bit16u *changedLines ) {
 #if C_DDRAW
@@ -955,6 +1122,13 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 		return;
 	sdl.updating=false;
 	switch (sdl.desktop.type) {
+// DWD BEGIN
+#if C_GAMELINK
+	case SCREEN_GAMELINK:
+		// already sent! - see GFX_OutputGameLink called by RENDER_EndUpdate
+		break;
+#endif // C_GAMELINK
+// DWD END
 	case SCREEN_SURFACE:
 		if (SDL_MUSTLOCK(sdl.surface)) {
 			if (sdl.blit.surface) {
@@ -1081,6 +1255,9 @@ Bitu GFX_GetRGB(Bit8u red,Bit8u green,Bit8u blue) {
 #endif
 		}
 	case SCREEN_OPENGL:
+// DWD BEGIN
+	case SCREEN_GAMELINK:
+// DWD END
 //		return ((red << 0) | (green << 8) | (blue << 16)) | (255 << 24);
 		//USE BGRA
 		return ((blue << 0) | (green << 8) | (red << 16)) | (255 << 24);
@@ -1178,7 +1355,7 @@ static void OutputString(Bitu x,Bitu y,const char * text,Bit32u color,Bit32u col
 	}
 }
 
-#include "dosbox_splash.h"
+// #include "dosbox_splash.h" // <-- DWD: Not needed, see GUI_SplashScreenInit above.
 
 //extern void UI_Run(bool);
 void Restart(bool pressed);
@@ -1189,6 +1366,9 @@ static void GUI_StartUp(Section * sec) {
 	sdl.active=false;
 	sdl.updating=false;
 // DWD BEGIN
+#if C_GAMELINK
+	sdl.gamelink.want_mouse = false;
+#endif // C_GAMELINK
 	sdl.window_title=section->Get_string("windowtitle");
 // DWD END
 
@@ -1197,7 +1377,35 @@ static void GUI_StartUp(Section * sec) {
 	sdl.desktop.lazy_fullscreen=false;
 	sdl.desktop.lazy_fullscreen_req=false;
 
-	sdl.desktop.fullscreen=section->Get_bool("fullscreen");
+// DWD BEGIN
+	{
+		std::string output = section->Get_string( "output" );
+
+#if C_GAMELINK
+#ifndef C_FORCE_GAMELINK
+		if ( output == "gamelink" || control->cmdline->FindExist( "-gamelink" ) )
+#endif // C_FORCE_GAMELINK
+		{
+			sdl.desktop.want_type = SCREEN_GAMELINK;
+			sdl.desktop.fullscreen = false;
+
+			// For tray icon.
+			SDL_EventState( SDL_SYSWMEVENT, SDL_ENABLE );
+		}
+#ifndef C_FORCE_GAMELINK
+		else
+		{
+			sdl.desktop.fullscreen = section->Get_bool( "fullscreen" );
+		}
+#endif // C_FORCE_GAMELINK
+#else // C_GAMELINK
+		{
+			sdl.desktop.fullscreen = section->Get_bool( "fullscreen" );
+		}
+#endif // C_GAMELINK
+	}
+// DWD END
+
 	sdl.wait_on_error=section->Get_bool("waitonerror");
 
 	Prop_multival* p=section->Get_multival("priority");
@@ -1305,7 +1513,10 @@ static void GUI_StartUp(Section * sec) {
 #endif
 	}
 	sdl.mouse.autoenable=section->Get_bool("autolock");
-	if (!sdl.mouse.autoenable) SDL_ShowCursor(SDL_DISABLE);
+// DWD BEGIN
+	if (!sdl.mouse.autoenable && sdl.desktop.want_type != SCREEN_GAMELINK )
+		SDL_ShowCursor(SDL_DISABLE);
+// DWD END
 	sdl.mouse.autolock=false;
 	sdl.mouse.sensitivity=section->Get_int("sensitivity");
 	std::string output=section->Get_string("output");
@@ -1313,6 +1524,13 @@ static void GUI_StartUp(Section * sec) {
 	/* Setup Mouse correctly if fullscreen */
 	if(sdl.desktop.fullscreen) GFX_CaptureMouse();
 
+// DWD BEGIN
+#if C_GAMELINK
+	if (sdl.desktop.want_type == SCREEN_GAMELINK) {
+		// already set above!
+	} else 
+#endif // C_GAMELINK
+// DWD END
 	if (output == "surface") {
 		sdl.desktop.want_type=SCREEN_SURFACE;
 #if C_DDRAW
@@ -1376,89 +1594,82 @@ static void GUI_StartUp(Section * sec) {
 	}
 	GFX_Stop();
 	SDL_WM_SetCaption("DOSBox",VERSION);
+// DWD BEGIN
+	GUI_SplashScreenInit();
+	GUI_SplashScreen( true ); // Pause!
+	
+#if C_GAMELINK
+	{
+		bool gamelink_master_enable;
+		gamelink_master_enable = section->Get_bool("gamelinkmaster");
 
-/* The endian part is intentionally disabled as somehow it produces correct results without according to rhoenie*/
-//#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-//    Bit32u rmask = 0xff000000;
-//    Bit32u gmask = 0x00ff0000;
-//    Bit32u bmask = 0x0000ff00;
-//#else
-    Bit32u rmask = 0x000000ff;
-    Bit32u gmask = 0x0000ff00;
-    Bit32u bmask = 0x00ff0000;
-//#endif
-
-/* Please leave the Splash screen stuff in working order in DOSBox. We spend a lot of time making DOSBox. */
-	SDL_Surface* splash_surf = SDL_CreateRGBSurface(SDL_SWSURFACE, 640, 400, 32, rmask, gmask, bmask, 0);
-	if (splash_surf) {
-		SDL_FillRect(splash_surf, NULL, SDL_MapRGB(splash_surf->format, 0, 0, 0));
-
-		Bit8u* tmpbufp = new Bit8u[640*400*3];
-		GIMP_IMAGE_RUN_LENGTH_DECODE(tmpbufp,gimp_image.rle_pixel_data,640*400,3);
-		for (Bitu y=0; y<400; y++) {
-
-			Bit8u* tmpbuf = tmpbufp + y*640*3;
-			Bit32u * draw=(Bit32u*)(((Bit8u *)splash_surf->pixels)+((y)*splash_surf->pitch));
-			for (Bitu x=0; x<640; x++) {
-//#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-//				*draw++ = tmpbuf[x*3+2]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+0]*0x10000+0x00000000;
-//#else
-				*draw++ = tmpbuf[x*3+0]+tmpbuf[x*3+1]*0x100+tmpbuf[x*3+2]*0x10000+0x00000000;
-//#endif
-			}
-		}
-
-		bool exit_splash = false;
-
-		static Bitu max_splash_loop = 600;
-		static Bitu splash_fade = 100;
-		static bool use_fadeout = true;
-
-		for (Bit32u ct = 0,startticks = GetTicks();ct < max_splash_loop;ct = GetTicks()-startticks) {
-			SDL_Event evt;
-			while (SDL_PollEvent(&evt)) {
-				if (evt.type == SDL_QUIT) {
-					exit_splash = true;
-					break;
-				}
-			}
-			if (exit_splash) break;
-
-			if (ct<1) {
-				SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
-				SDL_SetAlpha(splash_surf, SDL_SRCALPHA,255);
-				SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
-				SDL_Flip(sdl.surface);
-			} else if (ct>=max_splash_loop-splash_fade) {
-				if (use_fadeout) {
-					SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
-					SDL_SetAlpha(splash_surf, SDL_SRCALPHA, (Bit8u)((max_splash_loop-1-ct)*255/(splash_fade-1)));
-					SDL_BlitSurface(splash_surf, NULL, sdl.surface, NULL);
-					SDL_Flip(sdl.surface);
-				}
+		if ( gamelink_master_enable )
+		{
+			bool trackonly_mode;
+			if ( sdl.desktop.want_type == SCREEN_GAMELINK ) {
+				trackonly_mode = false;
+			} else {
+				// todo -> check config.
+				trackonly_mode = true;
 			}
 
+			// GAMELINK Init (after splash screen, so we have a HWND for tray icon on Win32)
+			memset( &sdl.gamelink.input_prev, 0, sizeof( GameLink::sSharedMMapInput_R2 ) );
+			int iresult = GameLink::Init( trackonly_mode );
+			if ( iresult != 1 )
+			{
+#ifdef WIN32
+				MessageBoxA( NULL, "ERROR: Couldn't initialise inter-process communication.",
+					"DOSBox \"Game Link\" Error", MB_OK | MB_ICONSTOP );
+#else // WIN32
+				LOG_MSG("GAMELINK: Couldn't initialise inter-process communication.");
+#endif // WIN32
+			
+				KillSwitch( true );
+			}
 		}
-
-		if (use_fadeout) {
-			SDL_FillRect(sdl.surface, NULL, SDL_MapRGB(sdl.surface->format, 0, 0, 0));
-			SDL_Flip(sdl.surface);
-		}
-		SDL_FreeSurface(splash_surf);
-		delete [] tmpbufp;
-
 	}
+#endif // C_GAMELINK
+// DWD END
+
+// DWD BEGIN
+	{
+		/* Tell the mapper we're in gamelink display mode - use a normalised Windows keyboard map on all platforms */
+		bool gamelink = false;
+#if C_GAMELINK
+		if ( sdl.desktop.want_type == SCREEN_GAMELINK ) {
+			gamelink = true;
+		}
+#endif // C_GAMELINK
+		MAPPER_SetGameLinkMode( gamelink );
+	}
+// DWD END
 
 	/* Get some Event handlers */
 	MAPPER_AddHandler(KillSwitch,MK_f9,MMOD1,"shutdown","ShutDown");
-	MAPPER_AddHandler(CaptureMouse,MK_f10,MMOD1,"capmouse","Cap Mouse");
-	MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
+// DWD BEGIN
+#if C_GAMELINK
+	if ( sdl.desktop.want_type != SCREEN_GAMELINK )
+#endif // C_GAMELINK
+// DWD END
+	{
+		MAPPER_AddHandler(CaptureMouse,MK_f10,MMOD1,"capmouse","Cap Mouse");
+		MAPPER_AddHandler(SwitchFullScreen,MK_return,MMOD2,"fullscr","Fullscreen");
+	}
 	MAPPER_AddHandler(Restart,MK_home,MMOD1|MMOD2,"restart","Restart");
 #if C_DEBUG
 	/* Pause binds with activate-debugger */
 #else
 	MAPPER_AddHandler(&PauseDOSBox, MK_pause, MMOD2, "pause", "Pause DBox");
 #endif
+// DWD BEGIN
+#if C_GAMELINK
+	if ( sdl.desktop.want_type != SCREEN_GAMELINK )
+#endif // C_GAMELINK
+// DWD END
+	{
+		MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper");
+	}
 	/* Get Keyboard state of numlock and capslock */
 	SDLMod keystate = SDL_GetModState();
 	if(keystate&KMOD_NUM) startup_state_numlock = true;
@@ -1466,11 +1677,23 @@ static void GUI_StartUp(Section * sec) {
 }
 
 void Mouse_AutoLock(bool enable) {
-	sdl.mouse.autolock=enable;
-	if (sdl.mouse.autoenable) sdl.mouse.requestlock=enable;
-	else {
-		SDL_ShowCursor(enable?SDL_DISABLE:SDL_ENABLE);
-		sdl.mouse.requestlock=false;
+// DWD BEGIN
+#if C_GAMELINK
+	if ( sdl.desktop.type == SCREEN_GAMELINK )
+	{
+		// store the 'want mouse' state
+		sdl.gamelink.want_mouse = enable;
+	}
+	else
+#endif // C_GAMELINK
+// DWD END
+	{
+		sdl.mouse.autolock = enable;
+		if ( sdl.mouse.autoenable ) sdl.mouse.requestlock = enable;
+		else {
+			SDL_ShowCursor( enable ? SDL_DISABLE : SDL_ENABLE );
+			sdl.mouse.requestlock = false;
+		}
 	}
 }
 
@@ -1533,6 +1756,115 @@ bool GFX_IsFullscreen(void) {
 	return sdl.desktop.fullscreen;
 }
 
+// === DWD BEGIN - moved here from sdl_mapper.cpp
+void MAPPER_RunEvent(Bitu /*val*/) {
+	KEYBOARD_ClrBuffer();	//Clear buffer
+	GFX_LosingFocus();		//Release any keys pressed (buffer gets filled again).
+	MAPPER_RunInternal();
+
+	// restore splash?
+	if ( sdl.desktop.type == SCREEN_GAMELINK ) {
+		GUI_SplashScreen( false );
+	}
+}
+// === DWD END
+
+
+// === DWD BEGIN
+#if C_GAMELINK
+
+static void gamelink_input_events()
+{
+	//
+	// Client Mouse & Keyboard
+
+	void MAPPER_CheckEvent(SDL_Event * event,bool passthrough);
+
+	if ( sdl.desktop.type == SCREEN_GAMELINK )
+	{
+		if ( GameLink::In( &sdl.gamelink.input, &sdl.gamelink.audio ) )
+		{
+			//
+			// -- Audio
+
+			float vol0 = sdl.gamelink.audio.master_vol_l / 100.0f;
+			float vol1 = sdl.gamelink.audio.master_vol_r / 100.0f;
+			MIXER_SetMaster( vol0, vol1 );
+
+
+			//
+			// -- Input
+
+			Mouse_CursorMoved( 
+				sdl.gamelink.input.mouse_dx, 
+				sdl.gamelink.input.mouse_dy, 
+				0, 
+				0, true /*emulate*/ );
+
+			// Cache old and new
+			const Bit8u old = sdl.gamelink.input_prev.mouse_btn;;
+			const Bit8u btn = sdl.gamelink.input.mouse_btn;
+
+			// Generate mouse events.
+			for ( Bit8u i = 0; i < 3; ++i )
+			{
+				const Bit8u mask = 1 << i;
+				if ( ( btn & mask ) && !( old & mask ) ) {
+					Mouse_ButtonPressed( i ); // L
+				}
+				if ( !( btn & mask ) && ( old & mask ) ) {
+					Mouse_ButtonReleased( i ); // L
+				}
+			}
+
+			// Generate key events
+			for ( Bit8u blk = 0; blk < 8; ++blk )
+			{
+				const Bit32u old = sdl.gamelink.input_prev.keyb_state[ blk ];
+				const Bit32u key = sdl.gamelink.input.keyb_state[ blk ];
+				for ( Bit8u bit = 0; bit < 32; ++bit )
+				{
+					const Bit8u scancode = static_cast< Bit8u >( ( blk * 32 ) + bit );
+				
+					// Build event
+					SDL_Event ev;
+					ev.key.type = 0;
+					ev.key.keysym.scancode = scancode;
+					ev.key.which = 0;
+					ev.key.keysym.unicode = 0;
+				
+					ev.key.keysym.mod = KMOD_NONE; // todo
+					ev.key.keysym.sym = SDLK_UNKNOWN; // todo
+
+					const Bit32u mask = 1 << bit;
+					if ( ( key & mask ) && !( old & mask ) ) {
+						ev.key.type = SDL_KEYDOWN;
+						ev.key.state = SDL_PRESSED;
+					}
+					if ( !( key & mask ) && ( old & mask ) ) {
+						ev.key.type = SDL_KEYUP;
+						ev.key.state = SDL_RELEASED;
+					}
+
+					// Dispatch?
+					if ( ev.key.type != 0 )
+					{
+						MAPPER_CheckEvent( &ev, true );
+					}
+				}
+			}
+
+			// Update history state
+			memcpy( &sdl.gamelink.input_prev, &sdl.gamelink.input, sizeof( GameLink::sSharedMMapInput_R2 ) );
+		}
+	}
+}
+
+#endif // C_GAMELINK
+// === DWD END
+
+
+
 #if defined(MACOSX)
 #define DB_POLLSKIP 3
 #else
@@ -1562,9 +1894,22 @@ void GFX_Events() {
 		MAPPER_UpdateJoysticks();
 	}
 #endif
+
+//DWD BEGIN
+#if C_GAMELINK
+	gamelink_input_events();
+#endif // C_GAMELINK
+//DWD END
+
+	int run_mapper = 0; // DWD
+	
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
 		case SDL_ACTIVEEVENT:
+//DWD BEGIN
+			if ( sdl.desktop.type == SCREEN_GAMELINK )
+				break;
+//DWD END
 			if (event.active.state & SDL_APPINPUTFOCUS) {
 				if (event.active.gain) {
 #ifdef WIN32
@@ -1638,10 +1983,18 @@ void GFX_Events() {
 			}
 			break;
 		case SDL_MOUSEMOTION:
+//DWD BEGIN
+			if ( sdl.desktop.type == SCREEN_GAMELINK )
+				break;
+//DWD END
 			HandleMouseMotion(&event.motion);
 			break;
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
+//DWD BEGIN
+			if ( sdl.desktop.type == SCREEN_GAMELINK )
+				break;
+//DWD END
 			HandleMouseButton(&event.button);
 			break;
 		case SDL_VIDEORESIZE:
@@ -1651,11 +2004,97 @@ void GFX_Events() {
 			throw(0);
 			break;
 		case SDL_VIDEOEXPOSE:
+//DWD BEGIN
+			if ( sdl.desktop.type == SCREEN_GAMELINK )
+				break;
+//DWD END
 			if (sdl.draw.callback) sdl.draw.callback( GFX_CallBackRedraw );
 			break;
+
+		
+// === DWD BEGIN
+#ifdef WIN32
+		case SDL_SYSWMEVENT:
+			
+			if ( sdl.desktop.type == SCREEN_GAMELINK ) 
+			{
+				switch ( event.syswm.msg->msg )
+				{
+
+				case WM_USER:
+
+					// Tray Icon
+					if ( event.syswm.msg->lParam == WM_RBUTTONDOWN ||
+						 event.syswm.msg->lParam == WM_LBUTTONDBLCLK )
+					{
+						POINT pt;
+						GetCursorPos( &pt );
+						
+						HMENU hMenu = LoadMenu( NULL, MAKEINTRESOURCE( IDR_TRAYMENU ) );
+						HMENU hPopup = GetSubMenu( hMenu, 0 ); 
+
+						HWND hWnd;
+						hWnd = event.syswm.msg->hwnd;
+
+						ShowWindow( hWnd, SW_SHOW );
+						SetForegroundWindow( hWnd );
+						SetFocus( hWnd );
+						
+						TrackPopupMenu( hPopup, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hWnd, NULL );
+
+						DestroyMenu( hMenu );
+
+						// SDL, or something, was eating my WM_COMMAND - so lets extract it first.
+						MSG msg;
+						bool clicked_something = false;
+						while( PeekMessageA( &msg, hWnd, WM_COMMAND, WM_COMMAND, PM_REMOVE ) )
+						{
+							clicked_something = true;
+
+							switch ( LOWORD( msg.wParam ) )
+							{
+
+							case ID_MENU_INPUTMAPPER:
+								{
+									run_mapper = 1;
+								}
+								break;
+								
+							case ID_TRAYMENU_EXIT:
+								{
+									KillSwitch( true );
+								}
+								break;
+
+							}; // command
+						}
+
+						if ( run_mapper )
+						{									
+							// Make sure we're not minimized
+							if ( IsIconic( hWnd ) ) {
+								ShowWindow( hWnd, SW_RESTORE );
+							} else {
+								ShowWindow( hWnd, SW_SHOWNORMAL );
+							}
+						}
+					}
+					
+					break;
+
+				}
+			}
+			break;
+#endif // WIN32
+// === DWD END
+
 #ifdef WIN32
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
+//DWD BEGIN
+			if ( sdl.desktop.type == SCREEN_GAMELINK )
+				break;
+//DWD END
 			// ignore event alt+tab
 			if (event.key.keysym.sym==SDLK_LALT) sdl.laltstate = event.key.type;
 			if (event.key.keysym.sym==SDLK_RALT) sdl.raltstate = event.key.type;
@@ -1669,6 +2108,10 @@ void GFX_Events() {
 #if defined (MACOSX)
 		case SDL_KEYDOWN:
 		case SDL_KEYUP:
+//DWD BEGIN
+			if ( sdl.desktop.type == SCREEN_GAMELINK )
+				break;
+//DWD END
 			/* On macs CMD-Q is the default key to close an application */
 			if (event.key.keysym.sym == SDLK_q && (event.key.keysym.mod == KMOD_RMETA || event.key.keysym.mod == KMOD_LMETA) ) {
 				KillSwitch(true);
@@ -1676,11 +2119,22 @@ void GFX_Events() {
 			}
 #endif
 		default:
-			void MAPPER_CheckEvent(SDL_Event * event);
-			MAPPER_CheckEvent(&event);
+//DWD BEGIN
+			if ( sdl.desktop.type == SCREEN_GAMELINK )
+				break;
+//DWD END
+			void MAPPER_CheckEvent(SDL_Event * event,bool passthrough);
+			MAPPER_CheckEvent(&event,false);
 		}
 	}
+
+//DWD BEGIN
+	// run mapper?
+	if ( run_mapper ) // DWD
+		MAPPER_RunEvent( 0 );
+//DWD END
 }
+
 
 #if defined (WIN32)
 static BOOL WINAPI ConsoleEventHandler(DWORD event) {
@@ -1751,6 +2205,11 @@ void Config_Add_SDL() {
 #if C_DDRAW
 		"ddraw",
 #endif
+// DWD BEGIN
+#if C_GAMELINK
+		"gamelink",
+#endif
+// DWD END
 		0 };
 	Pstring = sdl_sec->Add_string("output",Property::Changeable::Always,"surface");
 	Pstring->Set_help("What video system to use for output.");
@@ -1784,6 +2243,11 @@ void Config_Add_SDL() {
 
 	Pbool = sdl_sec->Add_bool("usescancodes",Property::Changeable::Always,true);
 	Pbool->Set_help("Avoid usage of symkeys, might not work on all operating systems.");
+
+// DWD BEGIN
+	Pbool = sdl_sec->Add_bool("gamelinkmaster",Property::Changeable::Always,true);
+	Pbool->Set_help("Master enable for Game Link. Use this to completely disable Game Link including video, input and tracking.");
+// DWD END
 }
 
 static void show_warning(char const * const message) {
@@ -1855,6 +2319,12 @@ extern void DEBUG_ShutDown(Section * /*sec*/);
 #endif
 
 void restart_program(std::vector<std::string> & parameters) {
+// DWD BEGIN
+#if C_GAMELINK
+	GameLink::Term();
+#endif // C_GAMELINK
+// DWD END
+
 	char** newargs = new char* [parameters.size()+1];
 	// parameter 0 is the executable path
 	// contents of the vector follow
@@ -1986,6 +2456,9 @@ int main(int argc, char* argv[]) {
 
 		/* Can't disable the console with debugger enabled */
 #if defined(WIN32) && !(C_DEBUG)
+// DWD BEGIN
+#if !defined(C_FORCE_GAMELINK) && !(C_DEBUG)
+// DWD END
 		if (control->cmdline->FindExist("-noconsole")) {
 			FreeConsole();
 			/* Redirect standard input and standard output */
@@ -2005,6 +2478,9 @@ int main(int argc, char* argv[]) {
 			}
 			SetConsoleTitle("DOSBox Status Window");
 		}
+// DWD BEGIN
+#endif // !C_FORCE_GAMELINK
+// DWD END
 #endif  //defined(WIN32) && !(C_DEBUG)
 		if (control->cmdline->FindExist("-version") ||
 		    control->cmdline->FindExist("--version") ) {
@@ -2069,6 +2545,9 @@ int main(int argc, char* argv[]) {
 #else
 		sdl.using_windib=false;
 #endif
+// === DWD ===
+#if !defined(_DEBUG)
+// ===========
 		char sdl_drv_name[128];
 		if (getenv("SDL_VIDEODRIVER")==NULL) {
 			if (SDL_VideoDriverName(sdl_drv_name,128)!=NULL) {
@@ -2091,6 +2570,9 @@ int main(int argc, char* argv[]) {
 		if (SDL_VideoDriverName(sdl_drv_name,128)!=NULL) {
 			if (strcmp(sdl_drv_name,"windib")==0) LOG_MSG("SDL_Init: Starting up with SDL windib video driver.\n          Try to update your video card and directx drivers!");
 		}
+// === DWD ===
+#endif // !defined(_DEBUG)
+// ===========
 #endif
 	sdl.num_joysticks=SDL_NumJoysticks();
 
@@ -2165,7 +2647,10 @@ int main(int argc, char* argv[]) {
 		Section_prop * sdl_sec=static_cast<Section_prop *>(control->GetSection("sdl"));
 
 		if (control->cmdline->FindExist("-fullscreen") || sdl_sec->Get_bool("fullscreen")) {
-			if(!sdl.desktop.fullscreen) { //only switch if not already in fullscreen
+// DWD BEGIN
+			if(!sdl.desktop.fullscreen && //only switch if not already in fullscreen, 
+				sdl.desktop.want_type!=SCREEN_GAMELINK) { // and not wanting headless (DWD)
+// DWD END
 				GFX_SwitchFullScreen();
 			}
 		}
@@ -2206,6 +2691,12 @@ int main(int argc, char* argv[]) {
 	//Force visible mouse to end user. Somehow this sometimes doesn't happen
 	SDL_WM_GrabInput(SDL_GRAB_OFF);
 	SDL_ShowCursor(SDL_ENABLE);
+	
+// DWD BEGIN
+#if C_GAMELINK
+	GameLink::Term();
+#endif // C_GAMELINK
+// DWD END
 
 	SDL_Quit();//Let's hope sdl will quit as well when it catches an exception
 	return 0;

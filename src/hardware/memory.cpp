@@ -57,6 +57,9 @@ static struct MemoryBlock {
 } memory;
 
 HostPt MemBase;
+// DWD BEGIN
+Bit32u MemBaseSize;
+// DWD END
 
 class IllegalPageHandler : public PageHandler {
 public:
@@ -559,12 +562,17 @@ public:
 			LOG_MSG("Memory sizes above %d MB are NOT recommended.",SAFE_MEMORY - 1);
 			LOG_MSG("Stick with the default values unless you are absolutely certain.");
 		}
-		MemBase = new Bit8u[memsize*1024*1024];
+		// DWD BEGIN
+		MemBaseSize = memsize * 1024 * 1024;
+		MemBase = new Bit8u[ MemBaseSize ];
+		// DWD END
 		if (!MemBase) E_Exit("Can't allocate main memory of %d MB",memsize);
 		/* Clear the memory, as new doesn't always give zeroed memory
 		 * (Visual C debug mode). We want zeroed memory though. */
-		memset((void*)MemBase,0,memsize*1024*1024);
-		memory.pages = (memsize*1024*1024)/4096;
+		// DWD BEGIN
+		memset((void*)MemBase,0,MemBaseSize);
+		memory.pages = (MemBaseSize)/4096;
+		// DWD END
 		/* Allocate the data for the different page information blocks */
 		memory.phandlers=new  PageHandler * [memory.pages];
 		memory.mhandles=new MemHandle [memory.pages];
@@ -595,6 +603,7 @@ public:
 	}
 	~MEMORY(){
 		delete [] MemBase;
+		MemBaseSize = 0; //DWD
 		delete [] memory.phandlers;
 		delete [] memory.mhandles;
 	}

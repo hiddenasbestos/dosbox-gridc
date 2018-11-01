@@ -12,6 +12,11 @@
 /* Define to 1 to use opengl display output support */
 #define C_OPENGL 1
 
+// DWD BEGIN
+/* Define to 1 to enable gamelink support */
+#define C_GAMELINK 1
+// DWD END
+
 /* Define to 1 to enable internal modem support, requires SDL_net */
 #define C_MODEM 1
 

@@ -46,6 +46,9 @@
 #include <cstdio>
 #endif
 
+// DWD BEGIN
+#undef Always
+// DWD END
 
 class Hex {
 private:

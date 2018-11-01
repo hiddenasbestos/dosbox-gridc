@@ -1143,7 +1143,7 @@ Bit16u CommandLine::Get_arglength() {
 	if (cmds.empty()) return 0;
 	Bit16u i=1;
 	for(cmd_it it=cmds.begin();it != cmds.end();it++)
-		i+=(*it).size() + 1;
+		i += static_cast< Bit16u >( (*it).size() ) + 1; /*DWD: Cast to fix warning*/
 	return --i;
 }
 

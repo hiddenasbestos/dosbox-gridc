@@ -75,6 +75,9 @@
     <Filter Include="Source Files\hardware\sound">
       <UniqueIdentifier>{9718dc26-37ea-4a29-b0b9-fe23d3c348f7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\gamelink">
+      <UniqueIdentifier>{0ad86778-5e78-4584-a5b1-0a33e08aff62}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\dosbox.cpp">
@@ -431,6 +434,15 @@
     <ClCompile Include="..\src\hardware\mixer.cpp">
       <Filter>Source Files\hardware\sound</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\gamelink\gamelink.cpp">
+      <Filter>Source Files\gamelink</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gamelink\gamelink_term.cpp">
+      <Filter>Source Files\gamelink</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\gui\sdl_gui.cpp">
+      <Filter>Source Files\gui</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
@@ -735,6 +747,45 @@
     </ClInclude>
     <ClInclude Include="..\src\hardware\opl.h">
       <Filter>Source Files\hardware\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gamelink\gamelink.h">
+      <Filter>Source Files\gamelink</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\dosbox_logo.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\dosbox_splash.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\midi_alsa.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\midi_coreaudio.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\midi_coremidi.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\midi_oss.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_loops.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_simple.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_templates_hq.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_templates_hq2x.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_templates_hq3x.h">
+      <Filter>Source Files\gui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\gui\render_templates_sai.h">
+      <Filter>Source Files\gui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -218,6 +218,11 @@ void RENDER_EndUpdate( bool abort ) {
 		CAPTURE_AddImage( render.src.width, render.src.height, render.src.bpp, pitch,
 			flags, fps, (Bit8u *)&scalerSourceCache, (Bit8u*)&render.pal.rgb );
 	}
+// DWD BEGIN
+#if C_GAMELINK
+	GFX_OutputGameLink();
+#endif // C_GAMELINK
+// DWD END
 	if ( render.scale.outWrite ) {
 		GFX_EndUpdate( abort? NULL : Scaler_ChangedLines );
 		render.frameskip.hadSkip[render.frameskip.index] = 0;

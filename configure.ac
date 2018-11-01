@@ -468,6 +468,40 @@ else
    AC_MSG_RESULT(no)
 fi
 
+AH_TEMPLATE(C_GAMELINK,[Define to 1 to enable game link headless mode])
+AC_CHECK_LIB(rt, main, have_rt_lib=yes, have_rt_lib=no , )
+AC_ARG_ENABLE(gamelink,AC_HELP_STRING([--disable-gamelink],[Disable headless game link output mode]),,enable_gamelink=yes)
+AC_MSG_CHECKING(whether gamelink is enabled) 
+if test x$enable_gamelink = xyes; then
+	case "$host" in
+	    *-*-darwin*)
+	       AC_MSG_RESULT(yes)
+	       AC_DEFINE(C_GAMELINK,1)
+	       ;;
+	    *)
+			if test x$have_rt_lib = xyes ; then
+	  		  AC_MSG_RESULT(yes)
+			  LIBS="$LIBS -lrt"
+			  AC_DEFINE(C_GAMELINK,1)
+			else
+			  AC_MSG_RESULT(no)
+			fi
+			;;
+	esac
+else
+	AC_MSG_RESULT(no)
+fi
+
+AH_TEMPLATE(C_FORCE_GAMELINK,[Define to 1 to create a game link only build])
+AC_ARG_ENABLE(force-gamelink,AC_HELP_STRING([--enable-force-gamelink],[Create a game link only build]),,enable_force_gamelink=no)
+AC_MSG_CHECKING(whether this is a game link only build)
+if test x$enable_force_gamelink = xyes -a x$enable_gamelink = xyes ; then 
+    AC_MSG_RESULT(yes)
+	AC_DEFINE(C_FORCE_GAMELINK,1)
+else
+	AC_MSG_RESULT(no)
+fi
+
 AH_TEMPLATE(C_OPENGL,[Define to 1 to use opengl display output support])
 AC_CHECK_LIB(GL, main, have_gl_lib=yes, have_gl_lib=no , )
 AC_CHECK_LIB(opengl32, main, have_opengl32_lib=yes,have_opengl32_lib=no , )
@@ -613,6 +647,7 @@ src/cpu/core_dynrec/Makefile
 src/debug/Makefile
 src/dos/Makefile
 src/fpu/Makefile
+src/gamelink/Makefile
 src/gui/Makefile
 src/hardware/Makefile
 src/hardware/mame/Makefile

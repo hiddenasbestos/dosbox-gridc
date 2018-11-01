@@ -38,6 +38,12 @@
 #include <string.h>
 #endif
 
+/// ==== DWD MSVC FIXES BEGIN ====
+#ifdef _MSC_VER
+#undef max
+#endif // _MSC_VER
+/// ==== DWD MSVC FIXES END ====
+
 using namespace std;
 
 #define MAX_LINE_LENGTH 512
@@ -119,7 +125,6 @@ int CDROM_Interface_Image::AudioFile::getLength()
 			shift += time >> 1;
 			time = 1;
 		} else {
-#undef max
 			if (time > ((numeric_limits<int>::max() - shift) / 2)) return -1;
 			time = time << 1;
 		}
