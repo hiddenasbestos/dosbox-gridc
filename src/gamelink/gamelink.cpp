@@ -32,7 +32,6 @@
 #include "gamelink.h"
 #include "../resource.h"
 
-extern Bit32u MemBaseSize;
 extern bool g_paused;
 
 //==============================================================================
@@ -43,18 +42,18 @@ extern bool g_paused;
 
 #define SYSTEM_NAME		"DOSBox"
 
-#define PROTOCOL_VER		3
+#define PROTOCOL_VER		4
 
 #ifdef WIN32
-#define GAMELINK_MUTEX_NAME		"DWD_GAMELINK_MUTEX_R3"
+#define GAMELINK_MUTEX_NAME		"DWD_GAMELINK_MUTEX_R4"
 #else // WIN32
-#define GAMELINK_MUTEX_NAME		"/DWD_GAMELINK_MUTEX_R3"
+#define GAMELINK_MUTEX_NAME		"/DWD_GAMELINK_MUTEX_R4"
 #endif // WIN32
 
 #ifdef MACOSX
-#define GAMELINK_MMAP_NAME		"/DWD_GAMELINK_MMAP_R3"
+#define GAMELINK_MMAP_NAME		"/DWD_GAMELINK_MMAP_R4"
 #else // MACOSX
-#define GAMELINK_MMAP_NAME		"DWD_GAMELINK_MMAP_R3"
+#define GAMELINK_MMAP_NAME		"DWD_GAMELINK_MMAP_R4"
 #endif // MACOSX
 
 
@@ -81,9 +80,11 @@ static int g_mmap_handle; // fd!
 
 static bool g_trackonly_mode;
 
-static GameLink::sSharedMemoryMap_R3* g_p_shared_memory;
+static Bit32u g_membase_size;
 
-#define MEMORY_MAP_SIZE sizeof( GameLink::sSharedMemoryMap_R3 )
+static GameLink::sSharedMemoryMap_R4* g_p_shared_memory;
+
+#define MEMORY_MAP_CORE_SIZE sizeof( GameLink::sSharedMemoryMap_R4 )
 
 
 //------------------------------------------------------------------------------
@@ -133,6 +134,9 @@ static void shared_memory_init()
 	// audio: 100%
 	g_p_shared_memory->audio.master_vol_l = 100;
 	g_p_shared_memory->audio.master_vol_r = 100;
+
+	// RAM
+	g_p_shared_memory->ram_size = g_membase_size;
 }
 
 //
@@ -241,16 +245,17 @@ static void destroy_mutex( const char* p_name )
 //
 static int create_shared_memory()
 {
+	const int memory_map_size = MEMORY_MAP_CORE_SIZE + g_membase_size;
 
 #ifdef WIN32
 
 	g_mmap_handle = CreateFileMappingA( INVALID_HANDLE_VALUE, NULL,
-			PAGE_READWRITE, 0, MEMORY_MAP_SIZE,	GAMELINK_MMAP_NAME );
+			PAGE_READWRITE, 0, memory_map_size,	GAMELINK_MMAP_NAME );
 
 	if ( g_mmap_handle )
 	{
-		g_p_shared_memory = reinterpret_cast< GameLink::sSharedMemoryMap_R3* >(
-			MapViewOfFile( g_mmap_handle, FILE_MAP_ALL_ACCESS, 0, 0, MEMORY_MAP_SIZE )
+		g_p_shared_memory = reinterpret_cast< GameLink::sSharedMemoryMap_R4* >(
+			MapViewOfFile( g_mmap_handle, FILE_MAP_ALL_ACCESS, 0, 0, memory_map_size )
 			);
 
 		if ( g_p_shared_memory )
@@ -282,7 +287,7 @@ static int create_shared_memory()
 	{
 		// set size
 		int r;
-		r = ftruncate( g_mmap_handle, MEMORY_MAP_SIZE );
+		r = ftruncate( g_mmap_handle, memory_map_size );
 		if ( r < 0 ) {
 			LOG_MSG( "GAMELINK: ftruncate failed with %d. errno = %d", r, errno );
 			close( g_mmap_handle );
@@ -293,8 +298,8 @@ static int create_shared_memory()
 		}
 
 		// map to a pointer.
-		g_p_shared_memory = reinterpret_cast< GameLink::sSharedMemoryMap_R3* >(
-			mmap( 0, MEMORY_MAP_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, g_mmap_handle, 0 )
+		g_p_shared_memory = reinterpret_cast< GameLink::sSharedMemoryMap_R4* >(
+			mmap( 0, memory_map_size, PROT_READ | PROT_WRITE, MAP_SHARED, g_mmap_handle, 0 )
 		);
 
 		if ( g_p_shared_memory == MAP_FAILED )
@@ -324,6 +329,7 @@ static int create_shared_memory()
 //
 static void destroy_shared_memory()
 {
+	const int memory_map_size = MEMORY_MAP_CORE_SIZE + g_membase_size;
 
 #ifdef WIN32
 
@@ -343,7 +349,7 @@ static void destroy_shared_memory()
 
 	if ( g_p_shared_memory )
 	{
-		munmap( g_p_shared_memory, MEMORY_MAP_SIZE );
+		munmap( g_p_shared_memory, memory_map_size );
 		g_p_shared_memory = NULL;
 	}
 
@@ -388,6 +394,18 @@ int GameLink::Init( const bool trackonly_mode )
 		return 0;
 	}
 
+	return 1;
+}
+
+//------------------------------------------------------------------------------
+// GameLink::AllocRAM
+//------------------------------------------------------------------------------
+Bit8u* GameLink::AllocRAM( const Bit32u size )
+{
+	int iresult;
+
+	g_membase_size = size;
+
 	// Create a shared memory area.
 	iresult = create_shared_memory();
 	if ( iresult != 1 )
@@ -405,7 +423,7 @@ int GameLink::Init( const bool trackonly_mode )
 	// Always clear this.
 	memset( &g_systray_icon, 0, sizeof( PNOTIFYICONDATAA ) );
 
-	if ( !trackonly_mode )
+	if ( !g_trackonly_mode )
 	{
 		// Add tray icon
 		g_systray_icon.cbSize = sizeof( PNOTIFYICONDATAA );
@@ -433,11 +451,15 @@ int GameLink::Init( const bool trackonly_mode )
 
 #endif // WIN32
 
-	InitTerminal();
+	GameLink::InitTerminal();
 
-	LOG_MSG( "GAMELINK: Initialised." );
+	const int memory_map_size = MEMORY_MAP_CORE_SIZE + g_membase_size;
+	LOG_MSG( "GAMELINK: Initialised. Allocated %d MB of shared memory.", (memory_map_size + (1024*1024) - 1) / (1024*1024) );
 
-	return 1;
+	Bit8u* membase = ((Bit8u*)g_p_shared_memory) + MEMORY_MAP_CORE_SIZE;
+
+	// Return RAM base pointer.
+	return membase;
 }
 
 //------------------------------------------------------------------------------
@@ -455,11 +477,11 @@ void GameLink::Term()
 	if ( g_p_shared_memory )
 		g_p_shared_memory->version = 0;
 
-	TermTerminal();
-
 	destroy_shared_memory();
 
 	destroy_mutex( GAMELINK_MUTEX_NAME );
+
+	g_membase_size = 0;
 }
 
 //------------------------------------------------------------------------------
@@ -540,19 +562,19 @@ void GameLink::Out( const Bit16u frame_width,
 	if ( g_trackonly_mode )
 	{
 		// Tracking Only - DOSBox handles video/input as usual.
-		flags = sSharedMemoryMap_R3::FLAG_NO_FRAME;
+		flags = sSharedMemoryMap_R4::FLAG_NO_FRAME;
 	}
 	else
 	{
 		// External Input Mode
-		flags = sSharedMemoryMap_R3::FLAG_WANT_KEYB;
+		flags = sSharedMemoryMap_R4::FLAG_WANT_KEYB;
 		if ( want_mouse )
-			flags |= sSharedMemoryMap_R3::FLAG_WANT_MOUSE;
+			flags |= sSharedMemoryMap_R4::FLAG_WANT_MOUSE;
 	}
 
 	// Paused?
 	if ( g_paused )
-		flags |= sSharedMemoryMap_R3::FLAG_PAUSED;
+		flags |= sSharedMemoryMap_R4::FLAG_PAUSED;
 
 
 	//
@@ -631,7 +653,7 @@ void GameLink::Out( const Bit16u frame_width,
 
 				Bit8u data;
 				// valid?
-				if ( address < MemBaseSize )
+				if ( address < g_membase_size )
 				{
 					data = p_sysmem[ address ]; // read data
 				}

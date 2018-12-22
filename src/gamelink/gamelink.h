@@ -97,11 +97,11 @@ namespace GameLink
 	};
 
 	//
-	// sSharedMemoryMap_R3
+	// sSharedMemoryMap_R4
 	//
 	// Memory Map (top-level object)
 	//
-	struct sSharedMemoryMap_R3
+	struct sSharedMemoryMap_R4
 	{
 		enum {
 			FLAG_WANT_KEYB			= 1 << 0,
@@ -130,6 +130,9 @@ namespace GameLink
 		sSharedMMapBuffer_R1 buf_recv; // a message to us.
 		sSharedMMapBuffer_R1 buf_tohost;
 		sSharedMMapAudio_R1 audio;
+
+		// added for protocol v4
+		Bit32u ram_size;
 	};
 
 #pragma pack( pop )
@@ -139,7 +142,9 @@ namespace GameLink
 	// Global Functions
 	//--------------------------------------------------------------------------
 
-	extern int Init( const bool trackonly_mode ); // slim mode is tracking only.
+	extern int Init( const bool trackonly_mode );
+	
+	extern Bit8u* AllocRAM( const Bit32u size );
 
 	extern void Term();
 
@@ -162,7 +167,6 @@ namespace GameLink
 	extern void ExecTerminalMech( sSharedMMapBuffer_R1* p_mechbuf );
 
 	extern void InitTerminal();
-	extern void TermTerminal();
 
 }; // namespace GameLink
 
