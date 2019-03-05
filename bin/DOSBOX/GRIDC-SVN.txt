@@ -13,7 +13,6 @@ http://sourceforge.net/p/dosbox/code-0/HEAD/tree/
 
 It's designed as a drop-in replacement for existing DOSBox installations.
 
-
 -----------------
 --- GAME LINK ---
 -----------------
@@ -40,6 +39,20 @@ The following extra features have also been added. They are all disabled by defa
 * Custom Window Title. Make games look friendlier with a custom window title. Set the option windowtitle=%name% with the text of your choice, or leave blank for default behaviour.
 
 * Fixes for audio 'popping' in Wizardry 6 and 7. To enable this add the line wizpopfix=6 or wizpopfix=7 below pcspeaker=true in the dosbox.conf file.
+
+
+--------------------
+--- MACOS ISSUES ---
+--------------------
+
+The following known minor issues are present on the macOS build and appear to be related to SDL1.2
+
+1. The dosbox_gamelink build will display an empty window, rather than the DOSBox logo.
+The software will otherwise work as normal and appear correctly inside Grid Cartographer.
+
+2. The dosbox build will not display correctly unless running in OpenGL mode. This is not the default display mode.
+You will need to modify dosbox.conf and also the file $HOME/Library/Preferences/DOSBox GRIDC-SVN Preferences
+Modify the line beginning "surface=" to read "surface=opengl".
 
 
 ------------------
