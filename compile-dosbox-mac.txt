@@ -1,0 +1,31 @@
+
+Here's how I build for macOS included for my benefit. Perhaps it will help you too, perhaps not...
+
+--- Prepare SDL ---
+
+get latest SDL from here: https://hg.libsdl.org/SDL/shortlog/19d8c3b9c251 ; extract to SDL-1.2.15 folder
+
+cd $HOME/DWDEV/Projects/dosbox-git/SDL-1.2.15
+./autogen.sh
+./configure --prefix=$HOME/DWDEV/Projects/dosbox-git/extlib --enable-static --disable-shared --disable-video-x11
+
+# official 1.2.15 needs this line to compile:
+# perl -ni -e 'print unless /CGDirectPaletteRef/' ./src/video/quartz/SDL_QuartzVideo.h
+
+make
+make install
+
+
+--- Compile DOSBox ---
+
+cd $HOME/DWDEV/Projects/dosbox-git/dosbox-gridc
+./autogen.sh
+./configure --with-sdl-prefix=$HOME/DWDEV/Projects/dosbox-git/extlib --enable-force-gamelink
+make
+mv src/dosbox src/dosbox_gamelink
+./configure --with-sdl-prefix=$HOME/DWDEV/Projects/dosbox-git/extlib
+make
+
+
+
+
