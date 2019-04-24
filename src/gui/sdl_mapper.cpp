@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -322,6 +322,7 @@ static Bit8u scancode_map[MAX_SDLKEYS];
 
 #define Z SDLK_UNKNOWN
 
+// DWD BEGIN
 #define MAX_SCANCODES 0x100
 
 // This is the key map we'll actually be using. It's setup in MAPPER_Startup
@@ -438,6 +439,7 @@ static const SDLKey sdlkey_map_macos[ MAX_SCANCODES ]=
 	/* 0xF0: */
 	Z,Z,Z,Z, Z,Z,Z,Z, Z,Z,Z,Z, Z,Z,Z,Z
 };
+// DWD END
 
 #undef Z
 
@@ -450,57 +452,59 @@ SDLKey MapSDLCode(Bitu skey) {
 	} else return (SDLKey)skey;
 }
 
-Bitu GetKeyCode(SDL_keysym keysym,bool passthrough) {
+Bitu GetKeyCode(SDL_keysym keysym,bool passthrough) { // DWD
 //	LOG_MSG("GetKeyCode %X %X %X",keysym.scancode,keysym.sym,keysym.mod);
 	if (usescancodes) {
 		Bitu key=(Bitu)keysym.scancode;
+// DWD BEGIN
 		if ( !passthrough )
 		{
-			if (key==0
-	#if defined (MACOSX)
-				/* On Mac on US keyboards, scancode 0 is actually the 'a'
-				 * key.  For good measure exclude all printables from this
-				 * condition. */
-				&& (keysym.sym < SDLK_SPACE || keysym.sym > SDLK_WORLD_95)
-	#endif
-				) {
-				/* try to retrieve key from symbolic key as scancode is zero */
-				if (keysym.sym<MAX_SDLKEYS) key=scancode_map[(Bitu)keysym.sym];
-			} 
-	#if !defined (WIN32) && !defined (MACOSX) && !defined(OS2)
-			/* Linux adds 8 to all scancodes */
-			else key-=8;
-	#endif
-	#if defined (WIN32)
-			switch (key) {
-				case 0x1c:	// ENTER
-				case 0x1d:	// CONTROL
-				case 0x35:	// SLASH
-				case 0x37:	// PRINTSCREEN
-				case 0x38:	// ALT
-				case 0x45:	// PAUSE
-				case 0x47:	// HOME
-				case 0x48:	// cursor UP
-				case 0x49:	// PAGE UP
-				case 0x4b:	// cursor LEFT
-				case 0x4d:	// cursor RIGHT
-				case 0x4f:	// END
-				case 0x50:	// cursor DOWN
-				case 0x51:	// PAGE DOWN
-				case 0x52:	// INSERT
-				case 0x53:	// DELETE
-					if (GFX_SDLUsingWinDIB()) key=scancode_map[(Bitu)keysym.sym];
-					break;
-			}
-	#endif
-		}; // !passthrough
+// DWD END
+		if (key==0
+#if defined (MACOSX)
+		    /* On Mac on US keyboards, scancode 0 is actually the 'a'
+		     * key.  For good measure exclude all printables from this
+		     * condition. */
+		    && (keysym.sym < SDLK_SPACE || keysym.sym > SDLK_WORLD_95)
+#endif
+			) {
+			/* try to retrieve key from symbolic key as scancode is zero */
+			if (keysym.sym<MAX_SDLKEYS) key=scancode_map[(Bitu)keysym.sym];
+		} 
+#if !defined (WIN32) && !defined (MACOSX) && !defined(OS2)
+		/* Linux adds 8 to all scancodes */
+		else key-=8;
+#endif
+#if defined (WIN32)
+		switch (key) {
+			case 0x1c:	// ENTER
+			case 0x1d:	// CONTROL
+			case 0x35:	// SLASH
+			case 0x37:	// PRINTSCREEN
+			case 0x38:	// ALT
+			case 0x45:	// PAUSE
+			case 0x47:	// HOME
+			case 0x48:	// cursor UP
+			case 0x49:	// PAGE UP
+			case 0x4b:	// cursor LEFT
+			case 0x4d:	// cursor RIGHT
+			case 0x4f:	// END
+			case 0x50:	// cursor DOWN
+			case 0x51:	// PAGE DOWN
+			case 0x52:	// INSERT
+			case 0x53:	// DELETE
+				if (GFX_SDLUsingWinDIB()) key=scancode_map[(Bitu)keysym.sym];
+				break;
+		}
+#endif
+// DWD BEGIN
+		}
+// DWD END
 		return key;
-	}
-	else
-	{
+	} else {
 #if defined (WIN32)
 		/* special handling of 102-key under windows */
-		if ((keysym.sym==SDLK_BACKSLASH) && (keysym.scancode==0x56) && !passthrough) return (Bitu)SDLK_LESS;
+		if ((keysym.sym==SDLK_BACKSLASH) && (keysym.scancode==0x56) && !passthrough) return (Bitu)SDLK_LESS; // DWD
 #endif
 		return (Bitu)keysym.sym;
 	}
@@ -545,13 +549,13 @@ public:
 		CBind * bind=CreateKeyBind((SDLKey)code);
 		return bind;
 	}
-	CBind * CreateEventBind(SDL_Event * event,bool passthrough) {
+	CBind * CreateEventBind(SDL_Event * event,bool passthrough) { // DWD
 		if (event->type!=SDL_KEYDOWN) return 0;
-		return CreateKeyBind((SDLKey)GetKeyCode(event->key.keysym,passthrough));
+		return CreateKeyBind((SDLKey)GetKeyCode(event->key.keysym,passthrough)); // DWD
 	};
-	bool CheckEvent(SDL_Event * event,bool passthrough) {
+	bool CheckEvent(SDL_Event * event,bool passthrough) { // DWD
 		if (event->type!=SDL_KEYDOWN && event->type!=SDL_KEYUP) return false;
-		Bitu key=GetKeyCode(event->key.keysym,passthrough);
+		Bitu key=GetKeyCode(event->key.keysym,passthrough); // DWD
 //		LOG_MSG("key type %i is %x [%x %x]",event->type,key,event->key.keysym.sym,event->key.keysym.scancode);
 		assert(Bitu(event->key.keysym.sym)<keys);
 		if (event->type==SDL_KEYDOWN) ActivateBindList(&lists[key],0x7fff,true);
@@ -712,7 +716,7 @@ public:
 		if (axes_cap>axes) axes_cap=axes;
 		hats_cap=emulated_hats;
 		if (hats_cap>hats) hats_cap=hats;
-		LOG_MSG("JOY%d: \"%s\" with %d axes, %d buttons and %d hat(s)",emustick+1,SDL_JoystickName(stick),axes,buttons,hats);
+		LOG_MSG("JOY%d: \"%s\" with %d axes, %d buttons and %d hat(s)",emustick+1,SDL_JoystickName(stick),axes,buttons,hats); // DWD
 	}
 	~CStickBindGroup() {
 		SDL_JoystickClose(sdl_joystick);
@@ -749,7 +753,7 @@ public:
 			if (abs(event->jaxis.value)<25000) return 0;
 			return CreateAxisBind(event->jaxis.axis,event->jaxis.value>0);
 		} else if (event->type==SDL_JOYBUTTONDOWN) {
-			if (event->button.which!=stick) return 0;
+			if (event->jbutton.which!=stick) return 0;
 #if defined (REDUCE_JOYSTICK_POLLING)
 			return CreateButtonBind(event->jbutton.button%button_wrap);
 #else
@@ -1431,7 +1435,9 @@ void CCaptionButton::Change(const char * format,...) {
 	mapper.redraw=true;
 }		
 
-static void set_page( Bit8u new_page ); // DWD
+// DWD BEGIN
+static void set_page( Bit8u new_page );
+// DWD END
 
 static void change_action_text(const char* text,Bit8u col);
 
@@ -1723,7 +1729,9 @@ static void SetActiveBind(CBind * _bind) {
 		if ( _bind->list->size() <= 1 ) {
 			bind_but.next->Enable(false);
 		} else {
-			bind_but.next->Enable(true);
+// DWD END
+		bind_but.next->Enable(true);
+// DWD BEGIN
 		}
 // DWD END
 		bind_but.mod1->Enable(true);
@@ -1763,14 +1771,18 @@ static void SetActiveEvent(CEvent * event) {
 	}
 }
 
-static void DrawBegin() {
-	SDL_FillRect(mapper.surface,0,0);
+// DWD BEGIN
+static void DrawBegin()
+{
+	SDL_FillRect(mapper.surface,0,CLR_BLACK);
 	SDL_LockSurface(mapper.surface);
 }
 
-static void DrawButtons( Bit8u page ) {
+static void DrawButtons( Bit8u page )
+{
 	sPage* p_page = &( g_page[ page ] );
-	for (CButton_it but_it = p_page->buttons.begin();but_it!=p_page->buttons.end();but_it++) {
+	for (CButton_it but_it = p_page->buttons.begin();but_it!=p_page->buttons.end();but_it++)
+	{
 		(*but_it)->Draw();
 	}
 }
@@ -1779,6 +1791,7 @@ static void DrawEnd() {
 	SDL_UnlockSurface(mapper.surface);
 	SDL_Flip(mapper.surface);
 }
+// DWD END
 
 static CKeyEvent * AddKeyButtonEvent(Bitu x,Bitu y,Bitu dx,Bitu dy,char const * const title,char const * const entry,KBD_KEYS key) {
 	char buf[64];
@@ -1883,6 +1896,7 @@ static KeyBlock combo_4[11]={
 static CKeyEvent * caps_lock_event=NULL;
 static CKeyEvent * num_lock_event=NULL;
 
+// DWD BEGIN
 static void CreateLayout_Common()
 {
 	g_p_active_page = &( g_page[ PAGE_COMMON ] );
@@ -2316,6 +2330,7 @@ static void CreateLayout_Joystick()
 		CreateLayout_Joystick_nopov();
 	}
 }
+// DWD END
 
 static SDL_Color map_pal[6]={
 	{0x00,0x00,0x00,0x00},			//0=black
@@ -2496,39 +2511,45 @@ static bool MAPPER_LoadBinds(void) {
 	return true;
 }
 
-void MAPPER_CheckEvent(SDL_Event * event,bool passthrough) {
+void MAPPER_CheckEvent(SDL_Event * event,bool passthrough) { // DWD
 	for (CBindGroup_it it=bindgroups.begin();it!=bindgroups.end();it++) {
-		if ((*it)->CheckEvent(event,passthrough)) return;
+		if ((*it)->CheckEvent(event,passthrough)) return; // DWD
 	}
 }
 
 void BIND_MappingEvents(void) {
 	SDL_Event event;
 
+// DWD BEGIN
 	sPage* p_common_page = &(g_page[ PAGE_COMMON ]);
 	g_p_active_page = &(g_page[ mapper.page ]);
+// DWD END
 
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
 		case SDL_MOUSEBUTTONUP:
 			/* Check the press */
-			for (CButton_it but_it = p_common_page->buttons.begin();but_it!=p_common_page->buttons.end();but_it++) {
+// DWD BEGIN
+			for (CButton_it but_it = p_common_page->buttons.begin();but_it!=p_common_page->buttons.end();but_it++)
+			{
 				if ((*but_it)->OnTop(event.button.x,event.button.y)) {
 					(*but_it)->Click();
 				}
 			}	
-			for (CButton_it but_it = g_p_active_page->buttons.begin();but_it!=g_p_active_page->buttons.end();but_it++) {
+			for (CButton_it but_it = g_p_active_page->buttons.begin();but_it!=g_p_active_page->buttons.end();but_it++)
+			{
 				if ((*but_it)->OnTop(event.button.x,event.button.y)) {
 					(*but_it)->Click();
 				}
 			}	
+// DWD END
 			break;
 		case SDL_QUIT:
 			mapper.exit=true;
 			break;
 		default:
 			if (mapper.addbind) for (CBindGroup_it it=bindgroups.begin();it!=bindgroups.end();it++) {
-				CBind * newbind=(*it)->CreateEventBind(&event,false);
+				CBind * newbind=(*it)->CreateEventBind(&event,false); // DWD
 				if (!newbind) continue;
 				mapper.aevent->AddBind(newbind);
 				SetActiveEvent(mapper.aevent);
@@ -2689,17 +2710,19 @@ void MAPPER_RunInternal() {
 	/* Go in the event loop */
 	mapper.exit=false;	
 	mapper.redraw=true;
-	set_page( PAGE_KEYBOARD );
+	set_page( PAGE_KEYBOARD ); // DWD
 #if defined (REDUCE_JOYSTICK_POLLING)
 	SDL_JoystickEventState(SDL_ENABLE);
 #endif
 	while (!mapper.exit) {
 		if (mapper.redraw) {
 			mapper.redraw=false;	
+// DWD BEGIN
 			DrawBegin();
 			DrawButtons( PAGE_COMMON );
 			DrawButtons( mapper.page );
 			DrawEnd();
+// DWD END
 		}
 		BIND_MappingEvents();
 		SDL_Delay(1);
@@ -2714,17 +2737,23 @@ void MAPPER_RunInternal() {
 
 void MAPPER_Init(void) {
 	InitializeJoysticks();
+// DWD BEGIN
 	CreateLayout_Common();
 	CreateLayout_Keyboard();
 	CreateLayout_Joystick();
+// DWD END
 	CreateBindGroups();
 	if (!MAPPER_LoadBinds()) CreateDefaultBinds();
-	for ( int page = 0; page < PAGE_COUNT; ++page ) {
+// DWD BEGIN
+	for ( int page = 0; page < PAGE_COUNT; ++page )
+	{
 		sPage* p_page = &( g_page[ page ] );
-		for (CButton_it but_it = p_page->buttons.begin();but_it!=p_page->buttons.end();but_it++) {
+		for (CButton_it but_it = p_page->buttons.begin();but_it!=p_page->buttons.end();but_it++)
+		{
 			(*but_it)->BindColor();
 		}
 	}
+// DWD END
 	if (SDL_GetModState()&KMOD_CAPS) {
 		for (CBindList_it bit=caps_lock_event->bindlist.begin();bit!=caps_lock_event->bindlist.end();bit++) {
 #if SDL_VERSION_ATLEAST(1, 2, 14)
@@ -2746,20 +2775,20 @@ void MAPPER_Init(void) {
 		}
 	}
 }
-
 //Somehow including them at the top conflicts with something in setup.h
 #ifdef C_X11_XKB
 #include "SDL_syswm.h"
 #include <X11/XKBlib.h>
 #endif
 
+// DWD BEGIN
 static bool g_gamelink_mode = false;
 void MAPPER_SetGameLinkMode( bool gamelink ) {
 	g_gamelink_mode = gamelink;
 }
+// DWD END
 
-void MAPPER_StartUp( Section * sec )
-{
+void MAPPER_StartUp(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
 	mapper.sticks.num=0;
 	mapper.sticks.num_groups=0;
@@ -2940,5 +2969,6 @@ void MAPPER_StartUp( Section * sec )
 
 	Prop_path* pp = section->Get_path("mapperfile");
 	mapper.filename = pp->realpath;
+	// MAPPER_AddHandler(&MAPPER_Run,MK_f1,MMOD1,"mapper","Mapper"); // DWD DISABLED!
 }
 
