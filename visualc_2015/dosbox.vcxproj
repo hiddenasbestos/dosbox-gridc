@@ -291,6 +291,7 @@
     <ClCompile Include="..\src\dos\drive_fat.cpp" />
     <ClCompile Include="..\src\dos\drive_iso.cpp" />
     <ClCompile Include="..\src\dos\drive_local.cpp" />
+    <ClCompile Include="..\src\dos\drive_overlay.cpp" />
     <ClCompile Include="..\src\dos\drive_virtual.cpp" />
     <ClCompile Include="..\src\fpu\fpu.cpp" />
     <ClCompile Include="..\src\gamelink\gamelink.cpp" />
@@ -399,7 +400,6 @@
     <ClInclude Include="..\include\logging.h" />
     <ClInclude Include="..\include\mem.h" />
     <ClInclude Include="..\include\mixer.h" />
-    <ClInclude Include="..\include\modules.h" />
     <ClInclude Include="..\include\mouse.h" />
     <ClInclude Include="..\include\paging.h" />
     <ClInclude Include="..\include\pic.h" />

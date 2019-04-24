@@ -443,6 +443,9 @@
     <ClCompile Include="..\src\gui\sdl_gui.cpp">
       <Filter>Source Files\gui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\dos\drive_overlay.cpp">
+      <Filter>Source Files\dos\drives</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\src\winres.rc">
@@ -670,9 +673,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\mixer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\include\modules.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\include\mouse.h">
