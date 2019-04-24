@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2018  The DOSBox Team
+ *  Copyright (C) 2002-2019  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -11,9 +11,9 @@
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 
 
@@ -429,6 +429,9 @@ bool Prop_multival::SetValue(std::string const& input) {
 	Property *p = section->Get_prop(0);
 	//No properties in this section. do nothing
 	if (!p) return false;
+	Value::Etype prevtype = Value::V_NONE;
+	string prevargument = "";
+
 	string::size_type loc = string::npos;
 	while( (p = section->Get_prop(i++)) ) {
 		//trim leading separators
@@ -443,13 +446,32 @@ bool Prop_multival::SetValue(std::string const& input) {
 			in = local;
 			local = "";
 		}
-		//Test Value. If it fails set default
-		Value valtest (in,p->Get_type());
-		if (!p->CheckValue(valtest,true)) {
-			make_default_value();
-			return false;
+		
+		if (p->Get_type() == Value::V_STRING) {
+			//Strings are only checked against the suggested values list.
+			//Test Value. If it fails set default
+			Value valtest (in,p->Get_type());
+			if (!p->CheckValue(valtest,true)) {
+				make_default_value();
+				return false;
+			}
+			p->SetValue(in);
+		} else {
+			//Non-strings can have more things, conversion alone is not enough (as invalid values as converted to 0)
+			bool r = p->SetValue(in);
+			if (!r) {
+				if (in.empty() && p->Get_type() == prevtype ) {
+					//Nothing there, but same type of variable, so repeat it (sensitivity)
+					in = prevargument; 
+					p->SetValue(in);
+				} else {
+					//Something was there to be parsed or not the same type. Invalidate entire property.
+					make_default_value();
+				}
+			}
 		}
-		p->SetValue(in);
+		prevtype = p->Get_type();
+		prevargument = in;
 
 	}
 	return retval;
