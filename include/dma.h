@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@ enum DMAEvent {
 	DMA_REACHED_TC,
 	DMA_MASKED,
 	DMA_UNMASKED,
-	DMA_TRANSFEREND
+//	DMA_TRANSFEREND, this shouldn't really be a ignal
 };
 
 class DmaChannel;
@@ -42,7 +42,7 @@ public:
 	Bit8u DMA16;
 	bool increment;
 	bool autoinit;
-	Bit8u trantype;
+//	Bit8u trantype; //Not used at the moment
 	bool masked;
 	bool tcount;
 	bool request;

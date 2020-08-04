@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@
 #include "inout.h"
 #include "render.h"
 #include "vga.h"
+#include "mem.h"
 
 /*
 3C6h (R/W):  PEL Mask
@@ -54,8 +55,8 @@ static void VGA_DAC_SendColor( Bitu index, Bitu src ) {
 	const Bit8u red = vga.dac.rgb[src].red;
 	const Bit8u green = vga.dac.rgb[src].green;
 	const Bit8u blue = vga.dac.rgb[src].blue;
-	//Set entry in 16bit output lookup table
-	vga.dac.xlat16[index] = ((blue>>1)&0x1f) | (((green)&0x3f)<<5) | (((red>>1)&0x1f) << 11);
+	//Set entry in (little endian) 16bit output lookup table
+	var_write(&vga.dac.xlat16[index], ((blue>>1)&0x1f) | (((green)&0x3f)<<5) | (((red>>1)&0x1f) << 11));
 	
 	RENDER_SetPal( index, (red << 2) | ( red >> 4 ), (green << 2) | ( green >> 4 ), (blue << 2) | ( blue >> 4 ) );
 }

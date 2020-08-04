@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -20,6 +20,9 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <math.h>
+#include <fstream>
+#include <sstream>
+#include <stdlib.h>
 
 #include "dosbox.h"
 #include "video.h"
@@ -30,8 +33,10 @@
 #include "cross.h"
 #include "hardware.h"
 #include "support.h"
+#include "shell.h"
 
 #include "render_scalers.h"
+#include "render_glsl.h"
 
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
@@ -211,6 +216,7 @@ void RENDER_EndUpdate( bool abort ) {
 			if (render.src.dblw) flags|=CAPTURE_FLAG_DBLW;
 			if (render.src.dblh) flags|=CAPTURE_FLAG_DBLH;
 		}
+		if (render.scale.outWrite==NULL) flags|=CAPTURE_FLAG_DUPLICATE;
 		float fps = render.src.fps;
 		pitch = render.scale.cachePitch;
 		if (render.frameskip.max)
@@ -234,6 +240,7 @@ void RENDER_EndUpdate( bool abort ) {
 			total += render.frameskip.hadSkip[i];
 		LOG_MSG( "Skipped frame %d %d", PIC_Ticks, (total * 100) / RENDER_SKIP_CACHE );
 #endif
+		if (RENDER_GetForceUpdate()) GFX_EndUpdate(0);
 	}
 	render.frameskip.index = (render.frameskip.index + 1) & (RENDER_SKIP_CACHE - 1);
 	render.updating=false;
@@ -286,6 +293,11 @@ static void RENDER_Reset( void ) {
 		gfx_scalew = 1;
 		gfx_scaleh = 1;
 	}
+
+	/* Don't do software scaler sizes larger than 4k */
+	Bitu maxsize_current_input = SCALER_MAXLINE_WIDTH/width;
+	if (render.scale.size > maxsize_current_input) render.scale.size = maxsize_current_input;
+
 	if ((dblh && dblw) || (render.scale.forced && !dblh && !dblw)) {
 		/* Initialize always working defaults */
 		if (render.scale.size == 2)
@@ -353,6 +365,10 @@ static void RENDER_Reset( void ) {
 #endif
 	} else if (dblw) {
 		simpleBlock = &ScaleNormalDw;
+		if (width * simpleBlock->xscale > SCALER_MAXLINE_WIDTH) {
+			// This should only happen if you pick really bad values... but might be worth adding selecting a scaler that fits
+			simpleBlock = &ScaleNormal1x;
+		}
 	} else if (dblh) {
 		simpleBlock = &ScaleNormalDh;
 	} else  {
@@ -381,11 +397,11 @@ forcenormal:
 	}
 	switch (render.src.bpp) {
 	case 8:
-		render.src.start = ( render.src.width * 1) / sizeof(Bitu);
-		if (gfx_flags & GFX_CAN_8)
-			gfx_flags |= GFX_LOVE_8;
-		else
-			gfx_flags |= GFX_LOVE_32;
+			render.src.start = ( render.src.width * 1) / sizeof(Bitu);
+			if (gfx_flags & GFX_CAN_8)
+				gfx_flags |= GFX_LOVE_8;
+			else
+				gfx_flags |= GFX_LOVE_32;
 			break;
 	case 15:
 			render.src.start = ( render.src.width * 2) / sizeof(Bitu);
@@ -424,6 +440,9 @@ forcenormal:
 		}
 	}
 /* Setup the scaler variables */
+#if C_OPENGL
+	GFX_SetShader(render.shader_src);
+#endif
 	gfx_flags=GFX_SetSize(width,height,gfx_flags,gfx_scalew,gfx_scaleh,&RENDER_CallBack);
 	if (gfx_flags & GFX_CAN_8)
 		render.scale.outMode = scalerMode8;
@@ -485,7 +504,7 @@ forcenormal:
 		render.scale.cachePitch = render.src.width * 4;
 		break;
 	default:
-		E_Exit("RENDER:Wrong source bpp %d", render.src.bpp );
+		E_Exit("RENDER:Wrong source bpp %" sBitfs(d), render.src.bpp );
 	}
 	render.scale.blocks = render.src.width / SCALER_BLOCKSIZE;
 	render.scale.lastBlock = render.src.width % SCALER_BLOCKSIZE;
@@ -539,7 +558,7 @@ void RENDER_SetSize(Bitu width,Bitu height,Bitu bpp,float fps,double ratio,bool 
 	RENDER_Reset( );
 }
 
-extern void GFX_SetTitle(Bit32s cycles, Bits frameskip,bool paused);
+extern void GFX_SetTitle(Bit32s cycles, int frameskip,bool paused);
 static void IncreaseFrameSkip(bool pressed) {
 	if (!pressed)
 		return;
@@ -567,6 +586,72 @@ static void ChangeScaler(bool pressed) {
 	}
 	RENDER_CallBack( GFX_CallBackReset );
 } */
+
+bool RENDER_GetForceUpdate(void) {
+	return render.forceUpdate;
+}
+
+void RENDER_SetForceUpdate(bool f) {
+	render.forceUpdate = f;
+}
+
+#if C_OPENGL
+static bool RENDER_GetShader(std::string& shader_path, char *old_src) {
+	char* src;
+	std::stringstream buf;
+	std::ifstream fshader(shader_path.c_str(), std::ios_base::binary);
+	if (!fshader.is_open()) fshader.open((shader_path + ".glsl").c_str(), std::ios_base::binary);
+	if (fshader.is_open()) {
+		buf << fshader.rdbuf();
+		fshader.close();
+	}
+	else if (shader_path == "advinterp2x") buf << advinterp2x_glsl;
+	else if (shader_path == "advinterp3x") buf << advinterp3x_glsl;
+	else if (shader_path == "advmame2x")   buf << advmame2x_glsl;
+	else if (shader_path == "advmame3x")   buf << advmame3x_glsl;
+	else if (shader_path == "rgb2x")       buf << rgb2x_glsl;
+	else if (shader_path == "rgb3x")       buf << rgb3x_glsl;
+	else if (shader_path == "scan2x")      buf << scan2x_glsl;
+	else if (shader_path == "scan3x")      buf << scan3x_glsl;
+	else if (shader_path == "tv2x")        buf << tv2x_glsl;
+	else if (shader_path == "tv3x")        buf << tv3x_glsl;
+	else if (shader_path == "sharp")       buf << sharp_glsl;
+
+	if (!buf.str().empty()) {
+		std::string s = buf.str();
+		if (first_shell) {
+			std::string pre_defs;
+			Bitu count = first_shell->GetEnvCount();
+			for (Bitu i=0; i < count; i++) {
+				std::string env;
+				if (!first_shell->GetEnvNum(i, env))
+					continue;
+				if (env.compare(0, 9, "GLSHADER_")==0) {
+					size_t brk = env.find('=');
+					if (brk == std::string::npos) continue;
+					env[brk] = ' ';
+					pre_defs += "#define " + env.substr(9) + '\n';
+				}
+			}
+			if (!pre_defs.empty()) {
+				// if "#version" occurs it must be before anything except comments and whitespace
+				size_t pos = buf.str().find("#version ");
+				if (pos != std::string::npos) pos = buf.str().find('\n', pos+9);
+				if (pos == std::string::npos) pos = 0;
+				else ++pos;
+				s = buf.str().insert(pos, pre_defs);
+			}
+		}
+		// keep the same buffer if contents aren't different
+		if (old_src==NULL || s != old_src) {
+			src = strdup(s.c_str());
+			if (src==NULL) LOG_MSG("WARNING: Couldn't copy shader source");
+		} else src = old_src;
+	} else src = NULL;
+	render.shader_src = src;
+	return src != NULL;
+}
+#endif
 
 void RENDER_Init(Section * sec) {
 	Section_prop * section=static_cast<Section_prop *>(sec);
@@ -621,10 +706,30 @@ void RENDER_Init(Section * sec) {
 	else if (scaler == "scan3x"){ render.scale.op = scalerOpScan;render.scale.size = 3; }
 #endif
 
+#if C_OPENGL
+	char* shader_src = render.shader_src;
+	Prop_path *sh = section->Get_path("glshader");
+	f = (std::string)sh->GetValue();
+	if (f.empty() || f=="none") render.shader_src = NULL;
+	else if (!RENDER_GetShader(sh->realpath,shader_src)) {
+		std::string path;
+		Cross::GetPlatformConfigDir(path);
+		path = path + "glshaders" + CROSS_FILESPLIT + f;
+		if (!RENDER_GetShader(path,shader_src) && (sh->realpath==f || !RENDER_GetShader(f,shader_src))) {
+			sh->SetValue("none");
+			LOG_MSG("Shader file \"%s\" not found", f.c_str());
+		}
+	}
+	if (shader_src!=render.shader_src) free(shader_src);
+#endif
+
 	//If something changed that needs a ReInit
 	// Only ReInit when there is a src.bpp (fixes crashes on startup and directly changing the scaler without a screen specified yet)
 	if(running && render.src.bpp && ((render.aspect != aspect) || (render.scale.op != scaleOp) || 
 				  (render.scale.size != scalersize) || (render.scale.forced != scalerforced) ||
+#if C_OPENGL
+				  (render.shader_src != shader_src) ||
+#endif
 				   render.scale.forced))
 		RENDER_CallBack( GFX_CallBackReset );
 

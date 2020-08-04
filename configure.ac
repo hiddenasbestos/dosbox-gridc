@@ -189,6 +189,33 @@ CXXFLAGS="$CXXFLAGS -mno-ms-bitfields"
 ],[AC_MSG_RESULT([no])])
 CFLAGS="$BACKUP_CFLAGS"
 
+dnl When on macOS, enable support for Apple's Core MIDI and/or Core Audio if our compiler can #include their headers
+case "$host" in
+  *-*-darwin*)
+   AC_MSG_CHECKING(if compiler supports Apple's Core MIDI headers)
+   AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+   #include <CoreMIDI/MIDIServices.h>
+   int blah() { return 0; }
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework CoreMIDI";AC_DEFINE([C_SUPPORTS_COREMIDI], [],
+   [Compiler supports Core MIDI headers])],
+   AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreMIDI functionality disabled. Please use the Apple compiler!]))
+
+   AC_MSG_CHECKING(if compiler supports Apple's Core Audio headers)
+   AC_COMPILE_IFELSE([AC_LANG_SOURCE([[
+   #include <AudioToolbox/AUGraph.h>
+   #include <CoreServices/CoreServices.h>
+   int blah() { return 0; }
+   ]])], [AC_MSG_RESULT(yes);LIBS="$LIBS -framework AudioUnit -framework AudioToolbox";AC_DEFINE([C_SUPPORTS_COREAUDIO], [],
+   [Compiler supports Core Audio headers])], 
+   AC_MSG_RESULT(no);AC_MSG_WARN([Compiler can't compile Apple headers. CoreAudio functionality disabled. Please use the Apple compiler!]))
+   ;;
+
+  *)
+   AC_MSG_CHECKING(if compiler supports Apple's MIDI headers)
+   AC_MSG_RESULT([no, not on Apple])
+   ;;
+esac
+
 dnl enable disable alsa and pass it's cflags to CXXFLAGS
 AC_ARG_ENABLE(alsa-midi,
 AC_HELP_STRING([--enable-alsa-midi],[compile with alsa midi support (default yes)]),
@@ -334,13 +361,13 @@ esac
 
 AC_ARG_ENABLE(dynamic-core,AC_HELP_STRING([--disable-dynamic-core],[Disable all dynamic cores]),,enable_dynamic_core=yes)
 
-AH_TEMPLATE(C_DYNAMIC_X86,[Define to 1 to use x86 dynamic cpu core])
-AC_ARG_ENABLE(dynamic-x86,AC_HELP_STRING([--disable-dynamic-x86],[Disable x86 dynamic cpu core]),,enable_dynamic_x86=yes)
+AH_TEMPLATE(C_DYNAMIC_X86,[Define to 1 to use x86/x64 dynamic cpu core])
+AC_ARG_ENABLE(dynamic-x86,AC_HELP_STRING([--disable-dynamic-x86],[Disable x86/x64 dynamic cpu core]),,enable_dynamic_x86=yes)
 AC_MSG_CHECKING(whether x86 dynamic cpu core will be enabled) 
 if test x$enable_dynamic_x86 = xno -o x$enable_dynamic_core = xno; then 
    AC_MSG_RESULT(no)
 else
-  if test x$c_targetcpu = xx86 ; then
+  if test x$c_targetcpu = xx86 -o x$c_targetcpu = xx86_64; then
       AC_DEFINE(C_DYNAMIC_X86,1)
       AC_MSG_RESULT(yes)
   else
@@ -355,7 +382,7 @@ if test x$enable_dynrec = xno -o x$enable_dynamic_core = xno; then
    AC_MSG_RESULT(no)
 else
 dnl x86 only enable it if dynamic-x86 is disabled.
-  if test x$c_targetcpu = xx86 ; then
+  if test x$c_targetcpu = xx86 -o x$c_targetcpu = xx86_64; then
     if test x$enable_dynamic_x86 = xno ; then
         AC_DEFINE(C_DYNREC,1)
         AC_MSG_RESULT(yes)
@@ -363,16 +390,11 @@ dnl x86 only enable it if dynamic-x86 is disabled.
         AC_MSG_RESULT([no, using dynamic-x86])
     fi
   else 
-    if test x$c_targetcpu = xx86_64 ; then
-        AC_DEFINE(C_DYNREC,1)
-        AC_MSG_RESULT(yes)
-    else
-      if test x$c_targetcpu = xarm ; then
-        AC_DEFINE(C_DYNREC,1)
-	AC_MSG_RESULT(yes)
-      else 
-        AC_MSG_RESULT(no)
-      fi
+    if test x$c_targetcpu = xarm ; then
+      AC_DEFINE(C_DYNREC,1)
+      AC_MSG_RESULT(yes)
+    else 
+      AC_MSG_RESULT(no)
     fi
   fi
 fi
@@ -417,17 +439,36 @@ else
 fi
 
 AH_TEMPLATE(C_SSHOT,[Define to 1 to enable screenshots, requires libpng])
-AC_ARG_ENABLE(screenshots,AC_HELP_STRING([--disable-screenshots],[Disable screenshots and movie recording]),,enable_screenshots=yes)
-AC_CHECK_HEADER(png.h,have_png_h=yes,)
-AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, ,-lz)
+AC_ARG_ENABLE(screenshots,AC_HELP_STRING([--disable-screenshots],[Disable screenshots]),enable_screenshots=no,enable_screenshots=yes)
+AC_CHECK_HEADER(png.h,have_png_h=yes,have_png_h=no)
+AC_CHECK_LIB(png, png_get_io_ptr, have_png_lib=yes, have_png_lib=no,-lz)
 AC_MSG_CHECKING([whether screenshots will be enabled])
 if test x$enable_screenshots = xyes; then 
-    if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
+  if test x$have_png_lib = xyes -a x$have_png_h = xyes ; then
     LIBS="$LIBS -lpng -lz"
     AC_DEFINE(C_SSHOT,1)
     AC_MSG_RESULT([yes])
   else
     AC_MSG_RESULT([no, can't find libpng.])
+  fi
+else
+  AC_MSG_RESULT([no])
+fi
+
+AH_TEMPLATE(C_SRECORD,[Define to 1 to enable movie recording, requires zlib built without Z_SOLO])
+AC_ARG_ENABLE(recording,AC_HELP_STRING([--disable-recording],[Disable movie recording]),,enable_recording=yes)
+AC_CHECK_HEADER(zlib.h,have_zlib_h=yes)
+AC_CHECK_LIB(z,compress,have_z_lib=yes,,)
+AC_MSG_CHECKING([whether recording will be enabled])
+if test x$enable_recording = xyes; then
+  if test x$have_z_lib = xyes -a x$have_zlib_h = xyes ; then
+    if test x$enable_screenshots = xno -o x$have_png_h = xno -o x$have_png_lib = xno ; then
+      LIBS="$LIBS -lz"
+    fi
+    AC_DEFINE(C_SRECORD,1)
+    AC_MSG_RESULT([yes])
+  else
+    AC_MSG_RESULT([no, can't find zlib.])
   fi
 else
   AC_MSG_RESULT([no])
@@ -574,6 +615,9 @@ AC_CHECK_HEADER([sys/mman.h], [
 AC_CHECK_FUNC([mprotect],[AC_DEFINE(C_HAVE_MPROTECT,1)])
 ])
 
+dnl Check for realpath. Used on Linux
+AC_CHECK_FUNCS([realpath])
+
 dnl Setpriority
 AH_TEMPLATE(C_SET_PRIORITY,[Define to 1 if you have setpriority support])
 AC_MSG_CHECKING(for setpriority support)
@@ -600,7 +644,6 @@ case "$host" in
        dnl to do more to distinguish them.
        dnl For now I am lazy and do not add proper detection code.
        AC_DEFINE(MACOSX, 1, [Compiling on Mac OS X])
-       LIBS="$LIBS -framework CoreMIDI -framework AudioUnit -framework AudioToolbox"
        AC_DEFINE(C_DIRECTSERIAL, 1, [ Define to 1 if you want serial passthrough support (Win32, Posix and OS/2).])
        ;;
     *-*-linux*)

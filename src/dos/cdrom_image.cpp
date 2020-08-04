@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -58,6 +58,7 @@ CDROM_Interface_Image::BinaryFile::BinaryFile(const char *filename, bool &error)
 CDROM_Interface_Image::BinaryFile::~BinaryFile()
 {
 	delete file;
+	file = NULL;
 }
 
 bool CDROM_Interface_Image::BinaryFile::read(Bit8u *buffer, int seek, int count)
@@ -134,12 +135,13 @@ int CDROM_Interface_Image::AudioFile::getLength()
 
 // initialize static members
 int CDROM_Interface_Image::refCount = 0;
-CDROM_Interface_Image* CDROM_Interface_Image::images[26];
+CDROM_Interface_Image* CDROM_Interface_Image::images[26] = {};
 CDROM_Interface_Image::imagePlayer CDROM_Interface_Image::player = {
 	NULL, NULL, NULL, {0}, 0, 0, 0, false, false, false, {0} };
 
 	
 CDROM_Interface_Image::CDROM_Interface_Image(Bit8u subUnit)
+                      :subUnit(subUnit)
 {
 	images[subUnit] = this;
 	if (refCount == 0) {
@@ -174,7 +176,7 @@ bool CDROM_Interface_Image::SetDevice(char* path, int forceCD)
 	
 	// print error message on dosbox console
 	char buf[MAX_LINE_LENGTH];
-	snprintf(buf, MAX_LINE_LENGTH, "Could not load image file: %s\n", path);
+	snprintf(buf, MAX_LINE_LENGTH, "Could not load image file: %s\r\n", path);
 	Bit16u size = (Bit16u)strlen(buf);
 	DOS_WriteFile(STDOUT, (Bit8u*)buf, &size);
 	return false;
@@ -381,6 +383,7 @@ bool CDROM_Interface_Image::LoadIsoFile(char* filename)
 	track.file = new BinaryFile(filename, error);
 	if (error) {
 		delete track.file;
+		track.file = NULL;
 		return false;
 	}
 	track.number = 1;
@@ -550,6 +553,7 @@ bool CDROM_Interface_Image::LoadCueSheet(char *cuefile)
 #endif
 			if (error) {
 				delete track.file;
+				track.file = NULL;
 				success = false;
 			}
 		}

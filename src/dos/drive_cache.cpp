@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -243,7 +243,7 @@ void DOS_Drive_Cache::AddEntryDirOverlay(const char* path, bool checkExists) {
 #if defined (WIN32) 
 		//OS2 ?
 		if (post > dironly && *(post - 1) == ':' && (post - dironly) == 2) 
-			post++; //move away from X: as need to end up with x:\ 
+			post++; //move away from X: as need to end up with x:\ .  
 #else
 	//Lets hope this is not really used.. (root folder specified as overlay)
 		if (post == dironly)

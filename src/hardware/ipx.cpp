@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -1072,7 +1072,7 @@ Bitu IPX_ESRHandler(void) {
 			CALLBACK_RunRealFar(RealSeg(ESRList->getESRAddr()),
 								RealOff(ESRList->getESRAddr()));
 		}
-		delete ESRList;
+		delete ESRList; //Destructor updates this pointer to the next value or NULL
 	}	// while
 
 	IO_WriteB(0xa0,0x63);	//EOI11

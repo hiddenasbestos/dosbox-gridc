@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -527,7 +527,7 @@ Bitu CALLBACK_SetupExtra(Bitu callback, Bitu type, PhysPt physAddress, bool use_
 			phys_writeb(physAddress+0x1B,(Bit8u)0xC3);	//A RETN Instruction
 		return (use_cb?32:27);
 	default:
-		E_Exit("CALLBACK:Setup:Illegal type %d",type);
+		E_Exit("CALLBACK:Setup:Illegal type %" sBitfs(u),type);
 	}
 	return 0;
 }

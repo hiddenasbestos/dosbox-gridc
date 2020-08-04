@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -112,13 +112,13 @@ public:
 		flags=PFLAG_READABLE|PFLAG_HASROM;
 	}
 	void writeb(PhysPt addr,Bitu val){
-		LOG(LOG_CPU,LOG_ERROR)("Write %x to rom at %x",val,addr);
+		LOG(LOG_CPU,LOG_ERROR)("Write %" sBitfs(x) " to rom at %x",val,addr);
 	}
 	void writew(PhysPt addr,Bitu val){
-		LOG(LOG_CPU,LOG_ERROR)("Write %x to rom at %x",val,addr);
+		LOG(LOG_CPU,LOG_ERROR)("Write %" sBitfs(x) " to rom at %x",val,addr);
 	}
 	void writed(PhysPt addr,Bitu val){
-		LOG(LOG_CPU,LOG_ERROR)("Write %x to rom at %x",val,addr);
+		LOG(LOG_CPU,LOG_ERROR)("Write %" sBitfs(x) " to rom at %x",val,addr);
 	}
 };
 
@@ -568,10 +568,10 @@ public:
 #if C_GAMELINK
 		MemBase = GameLink::AllocRAM( memsize * 1024 * 1024 ); 
 #else // C_GAMELINK
-		MemBase = new Bit8u[ memsize * 1024 * 1024 ];
+		MemBase = new(std::nothrow) Bit8u[memsize*1024*1024];
 #endif // C_GAMELINK
 		// DWD END
-		if (!MemBase) E_Exit("Can't allocate main memory of %d MB",memsize);
+		if (!MemBase) E_Exit("Can't allocate main memory of %" sBitfs(d) " MB",memsize);
 		/* Clear the memory, as new doesn't always give zeroed memory
 		 * (Visual C debug mode). We want zeroed memory though. */
 		memset((void*)MemBase,0,memsize*1024*1024);

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@
 #include <string>
   
 #include "dosbox.h"
+#include "cross.h"
 #include "debug.h"
 #include "support.h"
 #include "video.h"
@@ -182,9 +183,11 @@ void E_Exit(const char * format,...) {
 #endif
 	va_list msg;
 	va_start(msg,format);
-	vsprintf(buf,format,msg);
+	vsnprintf(buf,sizeof(buf),format,msg);
 	va_end(msg);
-	strcat(buf,"\n");
+
+	buf[sizeof(buf) - 1] = '\0';
+	//strcat(buf,"\n"); catcher should handle the end of line.. 
 
 	throw(buf);
 }

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -134,7 +134,10 @@ AutoexecObject::~AutoexecObject(){
 			if ((strncasecmp(buf2,"set ",4) == 0) && (strlen(buf2) > 4)){
 				char* after_set = buf2 + 4;//move to variable that is being set
 				char* test = strpbrk(after_set,"=");
-				if (!test) continue;
+				if (!test) {
+					delete [] buf2;
+					continue;
+				}
 				*test = 0;
 				stringset = true;
 				//If the shell is running/exists update the environment

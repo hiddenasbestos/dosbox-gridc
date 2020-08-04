@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -186,15 +186,19 @@ l_M_Ed:
 		case M_GRP:
 			inst.code=Groups[inst.code.op][inst.rm_index];
 			goto l_MODRMswitch;
-		case M_GRP_Ib:
-			inst_op2_d=Fetchb();
+		case M_SHIFT_Ib:
+			inst_op2_d=Fetchb() & 0x1f;
+			if (!inst_op2_d)
+				break;
 			inst.code=Groups[inst.code.op][inst.rm_index];
 			goto l_MODRMswitch;
-		case M_GRP_CL:
-			inst_op2_d=reg_cl;
+		case M_SHIFT_CL:
+			inst_op2_d=reg_cl & 0x1f;
+			if (!inst_op2_d)
+				break;
 			inst.code=Groups[inst.code.op][inst.rm_index];
 			goto l_MODRMswitch;
-		case M_GRP_1:
+		case M_SHIFT_1:
 			inst_op2_d=1;
 			inst.code=Groups[inst.code.op][inst.rm_index];
 			goto l_MODRMswitch;
