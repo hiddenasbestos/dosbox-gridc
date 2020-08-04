@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -278,7 +278,7 @@ static void PCSPEAKER_CallBack(Bitu len) {
 				index+=vol_len;
 			} else {
 				/* Check how long it will take to goto new level */
-				float vol_time=fabs(vol_diff)/SPKR_SPEED;
+				float vol_time=fabsf(vol_diff)/SPKR_SPEED;
 				if (vol_time<=vol_len) {
 					/* Volume reaches endpoint in this block, calc until that point */
 					value+=vol_time*spkr.volcur;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -254,7 +254,7 @@ bool Program::SetEnv(const char * entry,const char * new_string) {
 		env_write += (PhysPt)(strlen(env_string)+1);
 	}
 	/* Clear out the final piece of the environment */
-	mem_writed(env_write,0);
+	mem_writeb(env_write,0);
 	return true;
 }
 

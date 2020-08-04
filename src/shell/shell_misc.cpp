@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -368,7 +368,7 @@ void DOS_Shell::InputCommand(char * line) {
 
 	// remove current command from history if it's there
 	if (current_hist) {
-		current_hist=false;
+		// current_hist=false;
 		l_history.pop_front();
 	}
 

@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2002-2019  The DOSBox Team
+ *  Copyright (C) 2002-2020  The DOSBox Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -105,4 +105,5 @@ bool read_directory_first(dir_information* dirp, char* entry_name, bool& is_dire
 bool read_directory_next(dir_information* dirp, char* entry_name, bool& is_directory);
 void close_directory(dir_information* dirp);
 
+FILE *fopen_wrap(const char *path, const char *mode);
 #endif
