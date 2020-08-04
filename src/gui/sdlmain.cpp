@@ -49,16 +49,17 @@
 #include "cpu.h"
 #include "cross.h"
 #include "control.h"
+#include "render.h"
 
 //DWD BEGIN
 #if C_GAMELINK
 #include "../gamelink/gamelink.h"
-#include "render.h"
+#include "mixer.h"
+#endif // C_GAMELINK
 #ifdef WIN32
 #include "SDL_syswm.h"
 #include "../resource.h"
 #endif // WIN32
-#endif // C_GAMELINK
 //DWD END
 
 #define MAPPERFILE "mapper-" VERSION ".map"
