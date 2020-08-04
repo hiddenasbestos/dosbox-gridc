@@ -6,23 +6,23 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dosbox", "dosbox.vcxproj", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{56E491A6-8CF9-41FA-8A84-CD9F83BB3ABA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "..\extlib\zlib\vs2015\zlib.vcxproj", "{27E95423-D7FB-42E6-A009-6413484FE66A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "..\extlib\zlib\vs2017\zlib.vcxproj", "{27E95423-D7FB-42E6-A009-6413484FE66A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libogg_static", "..\extlib\libogg\win32\VS2015\libogg_static.vcxproj", "{15CBFEFF-7965-41F5-B4E2-21E8795C9159}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libogg_static", "..\extlib\libogg\win32\vs2017\libogg_static.vcxproj", "{15CBFEFF-7965-41F5-B4E2-21E8795C9159}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libvorbis_static", "..\extlib\libvorbis\win32\VS2015\libvorbis\libvorbis_static.vcxproj", "{3A214E06-B95E-4D61-A291-1F8DF2EC10FD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libvorbis_static", "..\extlib\libvorbis\win32\vs2017\libvorbis\libvorbis_static.vcxproj", "{3A214E06-B95E-4D61-A291-1F8DF2EC10FD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libvorbisfile_static", "..\extlib\libvorbis\win32\VS2015\libvorbisfile\libvorbisfile_static.vcxproj", "{CEBDE98B-A6AA-46E6-BC79-FAAF823DB9EC}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libvorbisfile_static", "..\extlib\libvorbis\win32\vs2017\libvorbisfile\libvorbisfile_static.vcxproj", "{CEBDE98B-A6AA-46E6-BC79-FAAF823DB9EC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "..\extlib\libpng\projects\vs2015\libpng.vcxproj", "{C18089D0-D225-4E1D-BF71-AD792F80E41E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "..\extlib\libpng\projects\vs2017\libpng.vcxproj", "{C18089D0-D225-4E1D-BF71-AD792F80E41E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL", "..\extlib\SDL\vs2015\SDL\SDL.vcxproj", "{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL", "..\extlib\SDL\vs2017\SDL\SDL.vcxproj", "{81CE8DAF-EBB2-4761-8E45-B71ABCCA8C68}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDLmain", "..\extlib\SDL\vs2015\SDLmain\SDLmain.vcxproj", "{F09FD81A-CE06-471D-ACB8-9CB52E98CDC9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDLmain", "..\extlib\SDL\vs2017\SDLmain\SDLmain.vcxproj", "{F09FD81A-CE06-471D-ACB8-9CB52E98CDC9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL_sound_static", "..\extlib\SDL_sound\vs2015\sdl_sound_static.vcxproj", "{5ABB361F-B74C-40A6-AE15-C7C468882D36}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL_sound_static", "..\extlib\SDL_sound\vs2017\sdl_sound_static.vcxproj", "{5ABB361F-B74C-40A6-AE15-C7C468882D36}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL_net", "..\extlib\SDL_net\vs2015\SDL_net.vcxproj", "{8AB3504F-5E58-4910-AFE8-7A1E595AC3F4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SDL_net", "..\extlib\SDL_net\vs2017\SDL_net.vcxproj", "{8AB3504F-5E58-4910-AFE8-7A1E595AC3F4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DLL", "DLL", "{633DBBBC-AD9D-4953-8694-B909EBC41071}"
 EndProject

@@ -1,0 +1,174 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <SccProjectName />
+    <SccLocalPath />
+    <ProjectGuid>{5ABB361F-B74C-40A6-AE15-C7C468882D36}</ProjectGuid>
+    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <ProjectName>SDL_sound_static</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="$(VCTargetsPath)Microsoft.Cpp.UpgradeFromVC60.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)obj\$(Configuration)\$(ProjectName)\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IntDir>$(SolutionDir)obj\$(Configuration)\$(ProjectName)\</IntDir>
+    <OutDir>$(SolutionDir)obj\$(Configuration)\$(ProjectName)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <Optimization>MinSpace</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\SDL\include\;$(ProjectDir)..\..\libvorbis\include\;$(ProjectDir)..\..\libogg\include\;..\;..\decoders;..\decoders\timidity;..\decoders\mpglib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;SOUND_SUPPORTS_AU;SOUND_SUPPORTS_AIFF;SOUND_SUPPORTS_SHN;SOUND_SUPPORTS_MIDI;SOUND_SUPPORTS_WAV;SOUND_SUPPORTS_VOC;SOUND_SUPPORTS_MPGLIB;SOUND_SUPPORTS_OGG;SOUND_SUPPORTS_RAW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderOutputFile>.\sdl_sound_static___Win32_Release\sdl_sound_static.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+    </ClCompile>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(OutDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\SDL-1.2.15\VisualC\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <Optimization>Disabled</Optimization>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\SDL\include\;$(ProjectDir)..\..\libvorbis\include\;$(ProjectDir)..\..\libogg\include\;..\;..\decoders;..\decoders\timidity;..\decoders\mpglib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;SOUND_SUPPORTS_AU;SOUND_SUPPORTS_AIFF;SOUND_SUPPORTS_SHN;SOUND_SUPPORTS_MIDI;SOUND_SUPPORTS_WAV;SOUND_SUPPORTS_VOC;SOUND_SUPPORTS_MPGLIB;SOUND_SUPPORTS_OGG;SOUND_SUPPORTS_RAW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderOutputFile>.\sdl_sound_static___Win32_Debug\sdl_sound_static.pch</PrecompiledHeaderOutputFile>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+    </ClCompile>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <Bscmake>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <OutputFile>$(OutDir)$(TargetName).bsc</OutputFile>
+    </Bscmake>
+    <Lib>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\..\SDL-1.2.15\VisualC\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\audio_convert.c" />
+    <ClCompile Include="..\decoders\aiff.c" />
+    <ClCompile Include="..\decoders\au.c" />
+    <ClCompile Include="..\decoders\flac.c" />
+    <ClCompile Include="..\decoders\midi.c" />
+    <ClCompile Include="..\decoders\mikmod.c" />
+    <ClCompile Include="..\decoders\modplug.c" />
+    <ClCompile Include="..\decoders\mpglib.c" />
+    <ClCompile Include="..\decoders\mpglib\dct64_i386.c" />
+    <ClCompile Include="..\decoders\mpglib\decode_i386.c" />
+    <ClCompile Include="..\decoders\mpglib\interface.c" />
+    <ClCompile Include="..\decoders\mpglib\layer1.c" />
+    <ClCompile Include="..\decoders\mpglib\layer2.c" />
+    <ClCompile Include="..\decoders\mpglib\layer3.c" />
+    <ClCompile Include="..\decoders\mpglib\mpglib_common.c" />
+    <ClCompile Include="..\decoders\mpglib\tabinit.c" />
+    <ClCompile Include="..\decoders\ogg.c" />
+    <ClCompile Include="..\decoders\raw.c" />
+    <ClCompile Include="..\decoders\shn.c" />
+    <ClCompile Include="..\decoders\smpeg.c" />
+    <ClCompile Include="..\decoders\timidity\common.c" />
+    <ClCompile Include="..\decoders\timidity\instrum.c" />
+    <ClCompile Include="..\decoders\timidity\mix.c" />
+    <ClCompile Include="..\decoders\timidity\output.c" />
+    <ClCompile Include="..\decoders\timidity\playmidi.c" />
+    <ClCompile Include="..\decoders\timidity\readmidi.c" />
+    <ClCompile Include="..\decoders\timidity\resample.c" />
+    <ClCompile Include="..\decoders\timidity\tables.c" />
+    <ClCompile Include="..\decoders\timidity\timidity.c" />
+    <ClCompile Include="..\decoders\voc.c" />
+    <ClCompile Include="..\decoders\wav.c" />
+    <ClCompile Include="..\extra_rwops.c" />
+    <ClCompile Include="..\SDL_sound.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\decoders\mpglib\huffman.h" />
+    <ClInclude Include="..\decoders\mpglib\l2tables.h" />
+    <ClInclude Include="..\decoders\mpglib\mpg123_sdlsound.h" />
+    <ClInclude Include="..\decoders\mpglib\mpglib_sdlsound.h" />
+    <ClInclude Include="..\decoders\timidity\common.h" />
+    <ClInclude Include="..\decoders\timidity\instrum.h" />
+    <ClInclude Include="..\decoders\timidity\mix.h" />
+    <ClInclude Include="..\decoders\timidity\options.h" />
+    <ClInclude Include="..\decoders\timidity\output.h" />
+    <ClInclude Include="..\decoders\timidity\playmidi.h" />
+    <ClInclude Include="..\decoders\timidity\readmidi.h" />
+    <ClInclude Include="..\decoders\timidity\resample.h" />
+    <ClInclude Include="..\decoders\timidity\tables.h" />
+    <ClInclude Include="..\decoders\timidity\timidity.h" />
+    <ClInclude Include="..\extra_rwops.h" />
+    <ClInclude Include="..\SDL_sound.h" />
+    <ClInclude Include="..\SDL_sound_internal.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\libogg\win32\VS2017\libogg_static.vcxproj">
+      <Project>{15cbfeff-7965-41f5-b4e2-21e8795c9159}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libvorbis\win32\VS2017\libvorbisfile\libvorbisfile_static.vcxproj">
+      <Project>{cebde98b-a6aa-46e6-bc79-faaf823db9ec}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\libvorbis\win32\VS2017\libvorbis\libvorbis_static.vcxproj">
+      <Project>{3a214e06-b95e-4d61-a291-1f8df2ec10fd}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

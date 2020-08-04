@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -26,22 +26,22 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Game Link|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Game Link Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -498,22 +498,22 @@
     <Image Include="..\src\dosbox.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\extlib\libpng\projects\vs2015\libpng.vcxproj">
+    <ProjectReference Include="..\extlib\libpng\projects\vs2017\libpng.vcxproj">
       <Project>{c18089d0-d225-4e1d-bf71-ad792f80e41e}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\extlib\SDL\vs2015\SDLmain\SDLmain.vcxproj">
+    <ProjectReference Include="..\extlib\SDL\vs2017\SDLmain\SDLmain.vcxproj">
       <Project>{f09fd81a-ce06-471d-acb8-9cb52e98cdc9}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\extlib\SDL\vs2015\SDL\SDL.vcxproj">
+    <ProjectReference Include="..\extlib\SDL\vs2017\SDL\SDL.vcxproj">
       <Project>{81ce8daf-ebb2-4761-8e45-b71abcca8c68}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\extlib\SDL_net\vs2015\SDL_net.vcxproj">
+    <ProjectReference Include="..\extlib\SDL_net\vs2017\SDL_net.vcxproj">
       <Project>{8ab3504f-5e58-4910-afe8-7a1e595ac3f4}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\extlib\SDL_sound\vs2015\sdl_sound_static.vcxproj">
+    <ProjectReference Include="..\extlib\SDL_sound\vs2017\sdl_sound_static.vcxproj">
       <Project>{5abb361f-b74c-40a6-ae15-c7c468882d36}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\extlib\zlib\vs2015\zlib.vcxproj">
+    <ProjectReference Include="..\extlib\zlib\vs2017\zlib.vcxproj">
       <Project>{27e95423-d7fb-42e6-a009-6413484fe66a}</Project>
     </ProjectReference>
   </ItemGroup>

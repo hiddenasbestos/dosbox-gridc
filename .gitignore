@@ -1,5 +1,6 @@
-visualc_2015/.vs/
+.vs
 visualc_2015/obj/
+visualc_2017/obj/
 *.user
 *.db
 *.opendb

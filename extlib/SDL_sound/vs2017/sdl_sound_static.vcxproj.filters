@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{da744ddc-d83c-40c7-a423-6c05680f6ba7}</UniqueIdentifier>
+      <Extensions>cpp;c;cxx;rc;def;r;odl;idl;hpj;bat</Extensions>
+    </Filter>
+    <Filter Include="Source Files\decoders">
+      <UniqueIdentifier>{7a1c93ca-7ecd-4f6d-bf4d-c261915cdee5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\decoders\mpglib">
+      <UniqueIdentifier>{68510205-6cdd-4f1d-8337-ad843d6e018e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\decoders\timidity">
+      <UniqueIdentifier>{7153b7d6-40e2-4e9f-b92b-206d3a6674ec}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\decoders\mpglib\dct64_i386.c">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\mpglib\decode_i386.c">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\mpglib\interface.c">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\mpglib\layer1.c">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\mpglib\layer2.c">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\mpglib\layer3.c">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\mpglib\mpglib_common.c">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\mpglib\tabinit.c">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\timidity\common.c">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\timidity\instrum.c">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\timidity\mix.c">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\timidity\output.c">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\timidity\playmidi.c">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\timidity\readmidi.c">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\timidity\resample.c">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\timidity\tables.c">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\timidity\timidity.c">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\aiff.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\au.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\flac.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\midi.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\mikmod.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\modplug.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\mpglib.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\ogg.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\raw.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\shn.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\smpeg.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\voc.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\decoders\wav.c">
+      <Filter>Source Files\decoders</Filter>
+    </ClCompile>
+    <ClCompile Include="..\audio_convert.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\extra_rwops.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\SDL_sound.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\decoders\mpglib\huffman.h">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\mpglib\l2tables.h">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\mpglib\mpg123_sdlsound.h">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\mpglib\mpglib_sdlsound.h">
+      <Filter>Source Files\decoders\mpglib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\timidity\common.h">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\timidity\instrum.h">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\timidity\mix.h">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\timidity\options.h">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\timidity\output.h">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\timidity\playmidi.h">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\timidity\readmidi.h">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\timidity\resample.h">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\timidity\tables.h">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\decoders\timidity\timidity.h">
+      <Filter>Source Files\decoders\timidity</Filter>
+    </ClInclude>
+    <ClInclude Include="..\extra_rwops.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDL_sound.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\SDL_sound_internal.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
